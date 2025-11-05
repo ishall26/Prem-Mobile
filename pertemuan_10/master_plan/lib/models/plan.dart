@@ -1,4 +1,4 @@
-import './task.dart';
+import 'task.dart';
 
 class Plan {
   final String name;
@@ -6,9 +6,14 @@ class Plan {
 
   const Plan({this.name = '', this.tasks = const []});
 
-  // Tambahan untuk Praktikum 2
   int get completedCount => tasks.where((task) => task.complete).length;
 
-  String get completenessMessage =>
-      '$completedCount out of ${tasks.length} tasks';
+  String get completenessMessage => '$completedCount out of ${tasks.length} tasks';
+}
+
+class Task {
+  final String description;
+  final bool complete;
+
+  const Task({this.description = '', this.complete = false});
 }
