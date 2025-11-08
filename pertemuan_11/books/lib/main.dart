@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
@@ -12,7 +10,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: 'Books - Harist',
+      title: 'Books Async Harist',
       home: FuturePage(),
     );
   }
@@ -28,56 +26,50 @@ class FuturePage extends StatefulWidget {
 class _FuturePageState extends State<FuturePage> {
   String _result = "";
 
-  // 🔹 Langkah 4: Method untuk mengambil data dari API
-  Future<void> getData() async {
-    const String baseUrl = 'https://www.googleapis.com/books/v1/volumes/';
-    const String path = 'RS7GDwAAQBAJ'; // Ganti dengan ID buku favoritmu
-    final Uri url = Uri.parse('$baseUrl$path');
-
-    try {
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        setState(() {
-          _result = jsonEncode(jsonDecode(response.body));
-        });
-      } else {
-        setState(() {
-          _result = 'Error: ${response.statusCode}';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _result = 'Error: $e';
-      });
-    }
+  // 🔹 Langkah 1 — Tiga method asynchronous
+  Future<int> returnOneAsync() async {
+    await Future.delayed(const Duration(seconds: 3));
+    return 1;
   }
 
-  // 🔹 build() menampilkan tampilan aplikasi
+  Future<int> returnTwoAsync() async {
+    await Future.delayed(const Duration(seconds: 3));
+    return 2;
+  }
+
+  Future<int> returnThreeAsync() async {
+    await Future.delayed(const Duration(seconds: 3));
+    return 3;
+  }
+
+  // 🔹 Langkah 2 — Method count()
+  Future<void> count() async {
+    int total = 0;
+
+    total += await returnOneAsync(); // tunggu sampai selesai (3 detik)
+    total += await returnTwoAsync(); // tunggu sampai selesai (3 detik)
+    total += await returnThreeAsync(); // tunggu sampai selesai (3 detik)
+
+    // total = 1 + 2 + 3 = 6
+
+    setState(() {
+      _result = "Total: $total";
+    });
+  }
+
+  // 🔹 Langkah 3 — Panggil count() di tombol
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Books App - Harist")),
+      appBar: AppBar(title: const Text("Async Await Demo - Harist")),
       body: Center(
         child: _result.isEmpty
-            ? const CircularProgressIndicator()
-            : SingleChildScrollView(
-                child: Text(_result),
-              ),
+            ? const Text("Tekan tombol untuk mulai menghitung...")
+            : Text(_result, style: const TextStyle(fontSize: 24)),
       ),
-      // 🔹 Langkah 5: Tombol untuk memanggil getData()
-      floatingActionButton: ElevatedButton(
-        onPressed: () {
-          getData().then((_) {
-            setState(() {
-              _result = _result.substring(0, 500); // tampilkan 500 karakter pertama
-            });
-          }).catchError((error) {
-            setState(() {
-              _result = 'Error: $error';
-            });
-          });
-        },
-        child: const Text('Get Data'),
+      floatingActionButton: FloatingActionButton(
+        onPressed: count,
+        child: const Icon(Icons.play_arrow),
       ),
     );
   }
