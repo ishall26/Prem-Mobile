@@ -1,5 +1,5 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:async/async.dart'; // penting! FutureGroup ada di sini
 
 void main() {
   runApp(const MyApp());
@@ -10,10 +10,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Future Demo',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const FuturePage(),
+    return const MaterialApp(
+      title: 'Books FutureGroup Harist',
+      home: FuturePage(),
     );
   }
 }
@@ -26,53 +25,98 @@ class FuturePage extends StatefulWidget {
 }
 
 class _FuturePageState extends State<FuturePage> {
-  late Completer<int> completer;
+  String result = "";
 
-  @override
-  void initState() {
-    super.initState();
-    completer = Completer<int>();
-    _calculateSum();
+  // ----------------------------------
+  // Langkah 1: Tambahkan tiga Future
+  // ----------------------------------
+  Future<int> returnOneAsync() async {
+    await Future.delayed(const Duration(seconds: 3));
+    return 1;
   }
 
-  Future<void> _calculateSum() async {
-    int result = await _sumNumbers(10);
-    completer.complete(result);
+  Future<int> returnTwoAsync() async {
+    await Future.delayed(const Duration(seconds: 3));
+    return 2;
   }
 
-  Future<int> _sumNumbers(int n) async {
-    int sum = 0;
-    for (int i = 1; i <= n; i++) {
-      await Future.delayed(const Duration(milliseconds: 300)); // simulasi proses
-      sum += i;
-    }
-    return sum;
+  Future<int> returnThreeAsync() async {
+    await Future.delayed(const Duration(seconds: 3));
+    return 3;
+  }
+
+  // ----------------------------------
+  // Langkah 1: Gunakan FutureGroup
+  // ----------------------------------
+  Future<void> runParallelWithFutureGroup() async {
+    setState(() {
+      result = "Menjalankan FutureGroup...";
+    });
+
+    final group = FutureGroup<int>();
+
+    group.add(returnOneAsync());
+    group.add(returnTwoAsync());
+    group.add(returnThreeAsync());
+
+    group.close(); // wajib ditutup agar FutureGroup tahu kapan selesai
+
+    final results = await group.future; // tunggu semua Future selesai
+    final sum = results.reduce((a, b) => a + b);
+
+    setState(() {
+      result = "Hasil penjumlahan: $sum";
+    });
+  }
+
+  // ----------------------------------
+  // Langkah 4: Versi Future.wait
+  // ----------------------------------
+  Future<void> runParallelWithFutureWait() async {
+    setState(() {
+      result = "Menjalankan Future.wait...";
+    });
+
+    final futures = Future.wait<int>([
+      returnOneAsync(),
+      returnTwoAsync(),
+      returnThreeAsync(),
+    ]);
+
+    final results = await futures;
+    final sum = results.reduce((a, b) => a + b);
+
+    setState(() {
+      result = "Hasil penjumlahan (Future.wait): $sum";
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Praktikum 3 - Future'),
-      ),
+      appBar: AppBar(title: const Text("Future Parallel - Harist")),
       body: Center(
-        child: FutureBuilder<int>(
-          future: completer.future,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
-            } else if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
-            } else if (snapshot.hasData) {
-              return Text(
-                'Hasil penjumlahan: ${snapshot.data}',
-                style: const TextStyle(fontSize: 20),
-              );
-            } else {
-              return const Text('Tidak ada data');
-            }
-          },
+        child: Text(
+          result.isEmpty ? "Tekan tombol di bawah untuk mulai!" : result,
+          style: const TextStyle(fontSize: 20),
+          textAlign: TextAlign.center,
         ),
+      ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            onPressed: runParallelWithFutureGroup, // langkah 1–3
+            label: const Text("FutureGroup"),
+            icon: const Icon(Icons.group),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton.extended(
+            onPressed: runParallelWithFutureWait, // langkah 4
+            label: const Text("Future.wait"),
+            icon: const Icon(Icons.timer),
+          ),
+        ],
       ),
     );
   }
