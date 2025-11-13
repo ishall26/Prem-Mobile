@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'geolocation.dart';
+import 'navigation_first.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,9 +12,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Praktikum 7 - Harist',
+      title: 'Praktikum 8 - Harist',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const LocationScreen(),
+      home: const NavigationFirst(),
     );
   }
 }
