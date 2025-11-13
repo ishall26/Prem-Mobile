@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Praktikum 6 - Harist',
+      title: 'Praktikum 7 - Harist',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const LocationScreen(),
     );

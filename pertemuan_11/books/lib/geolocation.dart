@@ -9,91 +9,94 @@ class LocationScreen extends StatefulWidget {
 }
 
 class _LocationScreenState extends State<LocationScreen> {
-  Position? _currentPosition;
-  bool _isLoading = false;
+  // Langkah 2: Tambah variabel Future
+  late Future<Position> _positionFuture;
 
-  @override
-  void initState() {
-    super.initState();
-    _determinePosition();
-  }
-
-  Future<void> _determinePosition() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    // 🔹 Soal 12: Tambahkan delay agar loading terlihat
-    await Future.delayed(const Duration(seconds: 3));
-
+  // Langkah 1: Modifikasi method getPosition()
+  Future<Position> getPosition() async {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Cek apakah GPS aktif
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      setState(() {
-        _isLoading = false;
-      });
-      return Future.error('Layanan lokasi tidak aktif.');
+      return Future.error('Location services are disabled.');
     }
 
-    // Cek izin lokasi
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        setState(() {
-          _isLoading = false;
-        });
-        return Future.error('Izin lokasi ditolak.');
+        return Future.error('Location permissions are denied.');
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      setState(() {
-        _isLoading = false;
-      });
       return Future.error(
-          'Izin lokasi ditolak permanen, ubah di pengaturan.');
+          'Location permissions are permanently denied, cannot request.');
     }
 
-    // Dapatkan posisi saat ini
-    final position = await Geolocator.getCurrentPosition();
+    // Tambahkan delay biar animasi loading kelihatan
+    await Future.delayed(const Duration(seconds: 3));
 
-    setState(() {
-      _currentPosition = position;
-      _isLoading = false;
-    });
+    // Dapatkan posisi sekarang
+    return await Geolocator.getCurrentPosition();
   }
 
+  // Langkah 3: Tambah initState()
+  @override
+  void initState() {
+    super.initState();
+    _positionFuture = getPosition();
+  }
+
+  // Langkah 4 & 5: Gunakan FutureBuilder
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lokasi GPS - Harist'), // 🧑 Soal 11
+        title: const Text("FutureBuilder Location - Harist"),
+        centerTitle: true,
       ),
       body: Center(
-        child: _isLoading
-            ? const CircularProgressIndicator() // animasi loading
-            : _currentPosition != null
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Latitude: ${_currentPosition!.latitude}'),
-                      Text('Longitude: ${_currentPosition!.longitude}'),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _determinePosition,
-                        child: const Text('Refresh Lokasi'),
-                      ),
-                    ],
-                  )
-                : const Text('Tekan tombol untuk mendapatkan lokasi'),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _determinePosition,
-        child: const Icon(Icons.location_on),
+        child: FutureBuilder<Position>(
+          future: _positionFuture,
+          builder: (context, snapshot) {
+            // loading
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text("Mendapatkan lokasi..."),
+                ],
+              );
+            }
+
+            // Langkah 5: handling error
+            else if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasError) {
+                return Text(
+                  "Something terrible happened!\n${snapshot.error}",
+                  textAlign: TextAlign.center,
+                );
+              }
+
+              // kalau berhasil
+              if (snapshot.hasData) {
+                final pos = snapshot.data!;
+                return Text(
+                  "Lokasi Anda:\nLat: ${pos.latitude}, Lon: ${pos.longitude}",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 18),
+                );
+              }
+            }
+
+            // fallback
+            return const Text("Tidak ada data lokasi.");
+          },
+        ),
       ),
     );
   }
