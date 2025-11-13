@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:async/async.dart'; // penting! FutureGroup ada di sini
+import 'package:async/async.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: 'Books FutureGroup Harist',
+      title: 'Books Error Handling Harist',
       home: FuturePage(),
     );
   }
@@ -27,77 +27,72 @@ class FuturePage extends StatefulWidget {
 class _FuturePageState extends State<FuturePage> {
   String result = "";
 
-  // ----------------------------------
-  // Langkah 1: Tambahkan tiga Future
-  // ----------------------------------
-  Future<int> returnOneAsync() async {
-    await Future.delayed(const Duration(seconds: 3));
-    return 1;
+  // ==================================================
+  // Langkah 1: Tambahkan method dengan error handling
+  // ==================================================
+  Future<String> getDataWithError(bool throwError) async {
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (throwError) {
+      throw Exception("Terjadi kesalahan saat mengambil data!");
+    } else {
+      return "Data berhasil diambil!";
+    }
   }
 
-  Future<int> returnTwoAsync() async {
-    await Future.delayed(const Duration(seconds: 3));
-    return 2;
+  // ==================================================
+  // Langkah 2: Tombol untuk menjalankan Future + catchError
+  // ==================================================
+  void _runWithCatchError() {
+    setState(() {
+      result = "Mengambil data...";
+    });
+
+    getDataWithError(true)
+        .then((value) {
+          setState(() {
+            result = value;
+          });
+        })
+        .catchError((error) {
+          setState(() {
+            result = "Error: ${error.toString()}";
+          });
+        })
+        .whenComplete(() {
+          debugPrint("Complete"); // tampil di debug console
+        });
   }
 
-  Future<int> returnThreeAsync() async {
-    await Future.delayed(const Duration(seconds: 3));
-    return 3;
-  }
-
-  // ----------------------------------
-  // Langkah 1: Gunakan FutureGroup
-  // ----------------------------------
-  Future<void> runParallelWithFutureGroup() async {
+  // ==================================================
+  // Langkah 4: Method handleError() menggunakan try-catch async/await
+  // ==================================================
+  Future<void> handleError() async {
     setState(() {
-      result = "Menjalankan FutureGroup...";
+      result = "Menunggu hasil async/await...";
     });
 
-    final group = FutureGroup<int>();
-
-    group.add(returnOneAsync());
-    group.add(returnTwoAsync());
-    group.add(returnThreeAsync());
-
-    group.close(); // wajib ditutup agar FutureGroup tahu kapan selesai
-
-    final results = await group.future; // tunggu semua Future selesai
-    final sum = results.reduce((a, b) => a + b);
-
-    setState(() {
-      result = "Hasil penjumlahan: $sum";
-    });
-  }
-
-  // ----------------------------------
-  // Langkah 4: Versi Future.wait
-  // ----------------------------------
-  Future<void> runParallelWithFutureWait() async {
-    setState(() {
-      result = "Menjalankan Future.wait...";
-    });
-
-    final futures = Future.wait<int>([
-      returnOneAsync(),
-      returnTwoAsync(),
-      returnThreeAsync(),
-    ]);
-
-    final results = await futures;
-    final sum = results.reduce((a, b) => a + b);
-
-    setState(() {
-      result = "Hasil penjumlahan (Future.wait): $sum";
-    });
+    try {
+      final data = await getDataWithError(true);
+      setState(() {
+        result = data;
+      });
+    } catch (e) {
+      setState(() {
+        result = "Terjadi error (try-catch): $e";
+      });
+    } finally {
+      debugPrint("Complete (async/await)");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Future Parallel - Harist")),
+      appBar: AppBar(title: const Text("Async Error Handling - Harist")),
       body: Center(
         child: Text(
-          result.isEmpty ? "Tekan tombol di bawah untuk mulai!" : result,
+          result.isEmpty ? "Tekan tombol untuk mulai!" : result,
           style: const TextStyle(fontSize: 20),
           textAlign: TextAlign.center,
         ),
@@ -106,15 +101,15 @@ class _FuturePageState extends State<FuturePage> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton.extended(
-            onPressed: runParallelWithFutureGroup, // langkah 1–3
-            label: const Text("FutureGroup"),
-            icon: const Icon(Icons.group),
+            onPressed: _runWithCatchError, // Langkah 2
+            label: const Text("Run then().catchError()"),
+            icon: const Icon(Icons.error_outline),
           ),
           const SizedBox(height: 10),
           FloatingActionButton.extended(
-            onPressed: runParallelWithFutureWait, // langkah 4
-            label: const Text("Future.wait"),
-            icon: const Icon(Icons.timer),
+            onPressed: handleError, // Langkah 4
+            label: const Text("Run try-catch (async/await)"),
+            icon: const Icon(Icons.bug_report),
           ),
         ],
       ),
