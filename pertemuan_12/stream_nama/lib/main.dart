@@ -25,10 +25,6 @@ class NumberStream {
     controller.sink.add(newNumber);
   }
 
-  void addNumberWithError() {
-    controller.sink.addError("Error: Angka tidak valid!");
-  }
-
   void close() {
     controller.close();
   }
@@ -44,91 +40,66 @@ class StreamHomePage extends StatefulWidget {
 class _StreamHomePageState extends State<StreamHomePage> {
   NumberStream numberStream = NumberStream();
 
-  StreamSubscription? subscription;
-  int lastNumber = 0;
+  StreamSubscription? subscription1;
+  StreamSubscription? subscription2;
+
+  int value1 = 0;
+  int value2 = 0;
 
   @override
   void initState() {
     super.initState();
 
-    // Langkah 2
-    subscription = numberStream.controller.stream.listen(
-      (event) {
-        setState(() {
-          lastNumber = event;
-        });
-      },
+    // LANGKAH 4 — UBAH JADI BROADCAST STREAM
+    Stream<int> broadcastStream = numberStream.controller.stream.asBroadcastStream();
 
-      // Langkah 3 – onError
-      onError: (error) {
-        debugPrint("Terjadi error: $error");
-      },
+    // LANGKAH 2 — LISTENER 1
+    subscription1 = broadcastStream.listen((event) {
+      setState(() {
+        value1 = event;
+      });
+    });
 
-      // Langkah 4 – onDone
-      onDone: () {
-        debugPrint("Stream telah selesai.");
-      },
-    );
+    // LISTENER 2
+    subscription2 = broadcastStream.listen((event) {
+      setState(() {
+        value2 = event;
+      });
+    });
   }
 
-  // Langkah 5
-  void stopSubscription() {
-    subscription?.cancel();
-    debugPrint("Subscription dihentikan!");
+  void addRandomNumber() {
+    Random random = Random();
+    int num = random.nextInt(10);
+    numberStream.addNumberToSink(num);
   }
 
   @override
   void dispose() {
-    // Langkah 6
-    subscription?.cancel();
+    subscription1?.cancel();
+    subscription2?.cancel();
     numberStream.close();
     super.dispose();
-  }
-
-  // Langkah 8
-  void addRandomNumber() {
-    Random random = Random();
-    int myNum = random.nextInt(10);
-
-    numberStream.addNumberToSink(myNum);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Praktikum 4 Stream Subscription"),
-        centerTitle: true,
+        title: const Text("Praktikum 5 — Multiple Subscriptions"),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              "Last number from stream:",
-              style: TextStyle(fontSize: 18),
-            ),
-            Text(
-              "$lastNumber",
-              style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-            ),
+            // LANGKAH 5
+            Text("Listener 1 menerima: $value1", style: TextStyle(fontSize: 22)),
+            const SizedBox(height: 20),
+            Text("Listener 2 menerima: $value2", style: TextStyle(fontSize: 22)),
             const SizedBox(height: 40),
-
-            // Button 1: Add Number
             ElevatedButton(
               onPressed: addRandomNumber,
-              child: const Text("Add Random Number"),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Langkah 7 – Button Stop Subscription
-            ElevatedButton(
-              onPressed: stopSubscription,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-              child: const Text("Stop Subscription"),
+              child: const Text("New Random Number"),
             ),
           ],
         ),
