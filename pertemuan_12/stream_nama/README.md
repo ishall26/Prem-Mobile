@@ -38,7 +38,7 @@
 
 ## ✅ PRAKTIKUM 3 — Widget ListView dan Card
 
-![Praktikum3](img/p3.gif) 
+![Praktikum3](img/P3.gif) 
 
 ### Soal
 1. Jelaskan fungsi `ListView`.  
@@ -53,7 +53,7 @@
 
 ## ✅ PRAKTIKUM 4 — Navigation & Routing
 
-![Praktikum4](img/p4.gif)
+![Praktikum4](img/P4.gif)
 
 ### Soal
 1. Apa fungsi `Navigator.push()`?  
@@ -68,7 +68,7 @@
 
 ## ✅ PRAKTIKUM 5 — Future & Async Await
 
-![Praktikum5](img/p5.png) (img/p5.png)
+![Praktikum5](img/P5.png)
 
 ### Soal
 1. Apa tujuan menggunakan `Future`?  
