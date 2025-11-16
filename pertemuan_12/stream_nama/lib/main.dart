@@ -1,13 +1,12 @@
-import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
+import 'stream.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const StreamApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class StreamApp extends StatelessWidget {
+  const StreamApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,18 +14,6 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: const StreamHomePage(),
     );
-  }
-}
-
-class NumberStream {
-  final StreamController<int> controller = StreamController<int>();
-
-  void addNumberToSink(int newNumber) {
-    controller.sink.add(newNumber);
-  }
-
-  void close() {
-    controller.close();
   }
 }
 
@@ -38,70 +25,35 @@ class StreamHomePage extends StatefulWidget {
 }
 
 class _StreamHomePageState extends State<StreamHomePage> {
-  NumberStream numberStream = NumberStream();
-
-  StreamSubscription? subscription1;
-  StreamSubscription? subscription2;
-
-  int value1 = 0;
-  int value2 = 0;
+  late NumberStream numberStream;
+  late Stream<int> stream;
 
   @override
   void initState() {
     super.initState();
-
-    // LANGKAH 4 — UBAH JADI BROADCAST STREAM
-    Stream<int> broadcastStream = numberStream.controller.stream.asBroadcastStream();
-
-    // LANGKAH 2 — LISTENER 1
-    subscription1 = broadcastStream.listen((event) {
-      setState(() {
-        value1 = event;
-      });
-    });
-
-    // LISTENER 2
-    subscription2 = broadcastStream.listen((event) {
-      setState(() {
-        value2 = event;
-      });
-    });
-  }
-
-  void addRandomNumber() {
-    Random random = Random();
-    int num = random.nextInt(10);
-    numberStream.addNumberToSink(num);
-  }
-
-  @override
-  void dispose() {
-    subscription1?.cancel();
-    subscription2?.cancel();
-    numberStream.close();
-    super.dispose();
+    numberStream = NumberStream();
+    stream = numberStream.getNumbers();   // langkah 6
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Praktikum 5 — Multiple Subscriptions"),
-      ),
+      appBar: AppBar(title: const Text("Praktikum 6: StreamBuilder")),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // LANGKAH 5
-            Text("Listener 1 menerima: $value1", style: TextStyle(fontSize: 22)),
-            const SizedBox(height: 20),
-            Text("Listener 2 menerima: $value2", style: TextStyle(fontSize: 22)),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: addRandomNumber,
-              child: const Text("New Random Number"),
-            ),
-          ],
+        child: StreamBuilder<int>(
+          stream: stream,                          // langkah 7
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Text("Error: ${snapshot.error}");
+            }
+            if (!snapshot.hasData) {
+              return const CircularProgressIndicator();
+            }
+            return Text(
+              "${snapshot.data}",
+              style: const TextStyle(fontSize: 40),
+            );
+          },
         ),
       ),
     );
