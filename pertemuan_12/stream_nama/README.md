@@ -1,8 +1,14 @@
+# Laporan Praktikum Codelabs #11
 # Laporan Praktikum Flutter — State Management, Async, Stream, dan BLoC
+## Identitas Mahasiswa
+| Nama | Kelas | Absen |
+|------|-------|-------|
+| Faishal Harist Rahmawan | TI-3H | 10 |
+
 
 ## ✅ PRAKTIKUM 1 — Dasar State pada Flutter
 
-![Preview](p1.gif)
+![Praktikum1](img/p1.gif) 
 
 ### Soal
 1. Apa fungsi dari `setState()`?  
@@ -17,7 +23,7 @@
 
 ## ✅ PRAKTIKUM 2 — State dan Input Kontrol
 
-![Preview](p2.gif)
+![Praktikum2](img/p2.gif)
 
 ### Soal
 1. Apa fungsi dari `TextEditingController`?  
@@ -32,7 +38,7 @@
 
 ## ✅ PRAKTIKUM 3 — Widget ListView dan Card
 
-![Preview](p3.gif)
+![Praktikum3](img/p3.gif) 
 
 ### Soal
 1. Jelaskan fungsi `ListView`.  
@@ -47,7 +53,7 @@
 
 ## ✅ PRAKTIKUM 4 — Navigation & Routing
 
-![Preview](p4.gif)
+![Praktikum4](img/p4.gif)
 
 ### Soal
 1. Apa fungsi `Navigator.push()`?  
@@ -62,7 +68,7 @@
 
 ## ✅ PRAKTIKUM 5 — Future & Async Await
 
-![Preview](p5.gif)
+![Praktikum5](img/p5.png) (img/p5.png)
 
 ### Soal
 1. Apa tujuan menggunakan `Future`?  
@@ -77,7 +83,7 @@
 
 ## ✅ PRAKTIKUM 6 — Stream
 
-![Preview](p6.gif)
+![Praktikum6](img/p6.gif)
 
 ### Soal
 1. Apa itu stream?  
@@ -92,7 +98,7 @@
 
 ## ✅ PRAKTIKUM 7 — BLoC Pattern
 
-![Preview](p7.gif)
+![Praktikum7](img/p7.gif)
 
 ### Soal
 1. Apa tujuan BLoC?  
