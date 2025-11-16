@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -11,10 +12,25 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Stream Transformation',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      debugShowCheckedModeBanner: false,
       home: const StreamHomePage(),
     );
+  }
+}
+
+class NumberStream {
+  final StreamController<int> controller = StreamController<int>();
+
+  void addNumberToSink(int newNumber) {
+    controller.sink.add(newNumber);
+  }
+
+  void addNumberWithError() {
+    controller.sink.addError("Error: Angka tidak valid!");
+  }
+
+  void close() {
+    controller.close();
   }
 }
 
@@ -26,66 +42,95 @@ class StreamHomePage extends StatefulWidget {
 }
 
 class _StreamHomePageState extends State<StreamHomePage> {
+  NumberStream numberStream = NumberStream();
 
-  //  Langkah 1: Tambah variabel di class state
-  late StreamController<int> numberStream;
-  late Stream<int> transformedStream;
+  StreamSubscription? subscription;
+  int lastNumber = 0;
 
   @override
   void initState() {
     super.initState();
 
-    //  Langkah 2: Inisialisasi stream & transformer
-    numberStream = StreamController<int>();
+    // Langkah 2
+    subscription = numberStream.controller.stream.listen(
+      (event) {
+        setState(() {
+          lastNumber = event;
+        });
+      },
 
-    final transformer = StreamTransformer<int, int>.fromHandlers(
-      handleData: (value, sink) {
-        // Filter: hanya angka kelipatan 10
-        if (value % 10 == 0) {
-          sink.add(value);
-        }
+      // Langkah 3 – onError
+      onError: (error) {
+        debugPrint("Terjadi error: $error");
+      },
+
+      // Langkah 4 – onDone
+      onDone: () {
+        debugPrint("Stream telah selesai.");
       },
     );
-
-    //  Langkah 3: Sambungkan transformer ke stream
-    transformedStream = numberStream.stream.transform(transformer);
-
-    // Mengirim data 0–100 setiap 100ms
-    generateNumbers();
   }
 
-  void generateNumbers() async {
-    for (int i = 0; i <= 100; i++) {
-      await Future.delayed(const Duration(milliseconds: 100));
-      numberStream.add(i);
-    }
+  // Langkah 5
+  void stopSubscription() {
+    subscription?.cancel();
+    debugPrint("Subscription dihentikan!");
   }
 
   @override
   void dispose() {
+    // Langkah 6
+    subscription?.cancel();
     numberStream.close();
     super.dispose();
+  }
+
+  // Langkah 8
+  void addRandomNumber() {
+    Random random = Random();
+    int myNum = random.nextInt(10);
+
+    numberStream.addNumberToSink(myNum);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Stream Transformer")),
+      appBar: AppBar(
+        title: const Text("Praktikum 4 Stream Subscription"),
+        centerTitle: true,
+      ),
       body: Center(
-        child: StreamBuilder(
-          stream: transformedStream,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const Text(
-                "Menunggu data...",
-                style: TextStyle(fontSize: 24),
-              );
-            }
-            return Text(
-              snapshot.data.toString(),
-              style: const TextStyle(fontSize: 48),
-            );
-          },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "Last number from stream:",
+              style: TextStyle(fontSize: 18),
+            ),
+            Text(
+              "$lastNumber",
+              style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 40),
+
+            // Button 1: Add Number
+            ElevatedButton(
+              onPressed: addRandomNumber,
+              child: const Text("Add Random Number"),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Langkah 7 – Button Stop Subscription
+            ElevatedButton(
+              onPressed: stopSubscription,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text("Stop Subscription"),
+            ),
+          ],
         ),
       ),
     );
