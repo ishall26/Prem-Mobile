@@ -344,3 +344,237 @@ Aplikasi dapat menangani:
 
 Kombinasi kedua praktikum ini menghasilkan aplikasi Flutter yang production-ready dan dapat menangani berbagai skenario data yang tidak ideal.
 
+---
+
+# PRAKTIKUM 3: Menangani Error JSON dengan Konstanta
+
+## Tujuan Praktikum 3
+
+Meningkatkan keamanan dan maintainability kode dengan:
+1. Mengganti string literals dengan konstanta
+2. Menghindari typo pada JSON keys
+3. Membuat kode lebih mudah di-maintain
+4. Meningkatkan code reusability
+
+## Masalah dengan String Literals
+
+**Contoh masalah:**
+```dart
+// ❌ String literals - rentan error
+pizzaName: json['pizzaName']?.toString() ?? 'No Name',
+description: json['description']?.toString() ?? 'No Description',
+```
+
+**Risiko:**
+- Typo pada nama kunci: `json['pizzaNam']` (lupa huruf 'e')
+- Kesulitan debugging - error terjadi saat runtime, bukan compile-time
+- Jika ada banyak file yang menggunakan kunci yang sama, perlu mengupdate banyak file
+- Tidak ada refactoring otomatis jika nama kunci berubah
+
+## Solusi: Menggunakan Konstanta
+
+**Langkah 1: Deklarasikan Konstanta di Atas Class**
+**File: `lib/model/pizza.dart`**
+
+```dart
+// Konstanta untuk JSON keys
+const String keyId = 'id';
+const String keyPizzaName = 'pizzaName';
+const String keyDescription = 'description';
+const String keyPrice = 'price';
+const String keyImageUrl = 'imageUrl';
+```
+
+**Benefit:**
+- Semua kunci JSON terdefinisi di satu tempat
+- Mudah untuk referensi dan maintain
+- Compiler dapat mendeteksi typo saat compile-time
+
+## Langkah 2: Perbarui fromJson() Menggunakan Konstanta
+
+```dart
+factory Pizza.fromJson(Map<String, dynamic> json) {
+  return Pizza(
+    id: json[keyId] is int
+        ? json[keyId]
+        : int.tryParse(json[keyId]?.toString() ?? '') ?? 0,
+
+    pizzaName: json[keyPizzaName]?.toString() ?? 'No Name',
+
+    description: json[keyDescription]?.toString() ?? 'No Description',
+
+    price: json[keyPrice] is double
+        ? json[keyPrice]
+        : double.tryParse(json[keyPrice]?.toString() ?? '') ?? 0,
+
+    imageUrl: json[keyImageUrl]?.toString() ?? '',
+  );
+}
+```
+
+**Perubahan:**
+- `json['id']` → `json[keyId]`
+- `json['pizzaName']` → `json[keyPizzaName]`
+- `json['description']` → `json[keyDescription]`
+- `json['price']` → `json[keyPrice]`
+- `json['imageUrl']` → `json[keyImageUrl]`
+
+## Langkah 3: Perbarui toJson() Menggunakan Konstanta
+
+```dart
+Map<String, dynamic> toJson() {
+  return {
+    keyId: id,
+    keyPizzaName: pizzaName,
+    keyDescription: description,
+    keyPrice: price,
+    keyImageUrl: imageUrl,
+  };
+}
+```
+
+**Perubahan:**
+- `'id'` → `keyId`
+- `'pizzaName'` → `keyPizzaName`
+- `'description'` → `keyDescription`
+- `'price'` → `keyPrice`
+- `'imageUrl'` → `keyImageUrl`
+
+## Langkah 4: Run Aplikasi
+
+Aplikasi berjalan tanpa perubahan visual, tetapi code menjadi lebih aman dan maintainable.
+
+## Soal 5: Jelaskan "Safe dan Maintainable"
+
+### Safe (Aman)
+
+**1. Compile-Time Error Detection**
+```dart
+// ❌ String literal - error terdeteksi saat runtime
+json['pizzaNam']  // Typo, tidak terdeteksi sampai runtime
+
+// ✅ Konstanta - error terdeteksi saat compile-time
+json[keyPizzaNam]  // ERROR! Konstanta tidak ada - compiler akan error
+```
+
+**2. Refactoring Aman**
+Jika nama kunci JSON berubah:
+```dart
+// ❌ String literal - harus update semua tempat secara manual
+// File 1: json['pizzaName']
+// File 2: json['pizzaName']
+// File 3: json['pizzaName']
+// ... risiko lupa update salah satu tempat
+
+// ✅ Konstanta - update hanya di satu tempat
+const String keyPizzaName = 'pizzaName'; // Update sini saja
+```
+
+**3. Menghindari Typo**
+```dart
+// ❌ Mudah typo pada string literal
+json['pizzzaName']  // Lupa huruf 'a' - compiler tidak akan error
+json['PIZZANAME']   // Salah case - compiler tidak akan error
+
+// ✅ Konstanta - IDE akan auto-complete dan tidak ada typo
+json[keyPizzaName]  // IDE otomatis melengkapi
+```
+
+### Maintainable (Mudah Dirawat)
+
+**1. Centralized Definition**
+```dart
+// Semua kunci JSON terdefinisi di satu tempat
+const String keyId = 'id';
+const String keyPizzaName = 'pizzaName';
+const String keyDescription = 'description';
+const String keyPrice = 'price';
+const String keyImageUrl = 'imageUrl';
+
+// Mudah melihat semua kunci yang digunakan dalam model
+```
+
+**2. Documentation Clarity**
+Konstanta membuat kode lebih self-documenting:
+```dart
+// ✅ Jelas apa yang diakses dari JSON
+pizzaName: json[keyPizzaName]?.toString() ?? 'No Name',
+
+// ❌ Kurang jelas
+pizzaName: json['pizzaName']?.toString() ?? 'No Name',
+```
+
+**3. Easy Search & Replace**
+Dengan konstanta, developer bisa dengan mudah:
+- Mencari di mana kunci JSON digunakan dengan IDE search
+- Refactor semua referensi sekaligus
+- Memahami dependencies dengan lebih jelas
+
+**4. Consistency Across Files**
+Jika multiple files menggunakan model Pizza:
+```dart
+// ✅ Semua file menggunakan kunci yang sama
+File 1: json[keyPizzaName]
+File 2: json[keyPizzaName]
+File 3: json[keyPizzaName]
+
+// ❌ Risiko inkonsistensi dengan string literal
+File 1: json['pizzaName']
+File 2: json['pizzaNam']   // Typo!
+File 3: json['PizzaName']  // Case sensitivity!
+```
+
+## Perbandingan Sebelum & Sesudah
+
+| Aspek | String Literals | Konstanta |
+|-------|-----------------|-----------|
+| **Error Detection** | Runtime | Compile-time |
+| **Typo Protection** | ❌ Tidak | ✅ Ya |
+| **Refactoring** | Manual, risiko tinggi | Otomatis, aman |
+| **Documentation** | Kurang jelas | Self-documenting |
+| **Reusability** | Perlu copy-paste | Central definition |
+| **Maintainability** | Sulit | Mudah |
+| **IDE Support** | Minimal | Auto-complete |
+
+## Best Practices
+
+### 1. Letakkan Konstanta di Atas Class
+```dart
+const String keyId = 'id';
+const String keyPizzaName = 'pizzaName';
+// ... konstanta lainnya
+
+class Pizza {
+  // ... class definition
+}
+```
+
+### 2. Gunakan Naming Convention yang Jelas
+```dart
+// ✅ Jelas ini adalah JSON key
+const String keyPizzaName = 'pizzaName';
+
+// ❌ Ambigu
+const String pizzaName = 'pizzaName';
+```
+
+### 3. Group Konstanta Sesuai Model
+Jika ada model lain, pisahkan konstanta:
+```dart
+// Pizza constants
+const String keyId = 'id';
+const String keyPizzaName = 'pizzaName';
+
+// Jangan campur dengan konstanta model lain
+```
+
+## Kesimpulan Praktikum 3
+
+Dengan menggunakan konstanta untuk JSON keys:
+- ✅ **Safe**: Error terdeteksi lebih awal (compile-time)
+- ✅ **Maintainable**: Mudah untuk refactor dan update
+- ✅ **Professional**: Best practice dalam production code
+- ✅ **Scalable**: Mudah dikembangkan ke file-file baru
+
+Praktikum 3 menunjukkan pentingnya code quality dan best practices dalam development, bukan hanya fungsionalitas yang bekerja.
+

@@ -1,3 +1,10 @@
+// Konstanta untuk JSON keys
+const String keyId = 'id';
+const String keyPizzaName = 'pizzaName';
+const String keyDescription = 'description';
+const String keyPrice = 'price';
+const String keyImageUrl = 'imageUrl';
+
 class Pizza {
   int id;
   String pizzaName;
@@ -15,29 +22,29 @@ class Pizza {
 
   factory Pizza.fromJson(Map<String, dynamic> json) {
     return Pizza(
-      id: json['id'] is int
-          ? json['id']
-          : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      id: json[keyId] is int
+          ? json[keyId]
+          : int.tryParse(json[keyId]?.toString() ?? '') ?? 0,
 
-      pizzaName: json['pizzaName']?.toString() ?? 'No Name',
+      pizzaName: json[keyPizzaName]?.toString() ?? 'No Name',
 
-      description: json['description']?.toString() ?? 'No Description',
+      description: json[keyDescription]?.toString() ?? 'No Description',
 
-      price: json['price'] is double
-          ? json['price']
-          : double.tryParse(json['price']?.toString() ?? '') ?? 0,
+      price: json[keyPrice] is double
+          ? json[keyPrice]
+          : double.tryParse(json[keyPrice]?.toString() ?? '') ?? 0,
 
-      imageUrl: json['imageUrl']?.toString() ?? '',
+      imageUrl: json[keyImageUrl]?.toString() ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'pizzaName': pizzaName,
-      'description': description,
-      'price': price,
-      'imageUrl': imageUrl,
+      keyId: id,
+      keyPizzaName: pizzaName,
+      keyDescription: description,
+      keyPrice: price,
+      keyImageUrl: imageUrl,
     };
   }
 }
