@@ -21,9 +21,91 @@ Aplikasi Flutter untuk menampilkan daftar pizza dengan penanganan data JSON yang
 - ✅ Menghindari typo pada nama kunci
 - ✅ Meningkatkan code safety dan maintainability
 
+### Praktikum 4: SharedPreferences
+- ✅ Menyimpan data sederhana (counter) ke local storage
+- ✅ Membaca data dari storage dengan null coalescing
+- ✅ Menghapus semua data dengan clear()
+- ✅ Integrasi dengan JSON loading dari praktikum sebelumnya
+
 ---
 
-## 📋 Soal 5: Jelaskan "Safe dan Maintainable"
+## 📋 Soal 6: SharedPreferences Implementation
+
+### Fitur yang Ditambahkan
+
+**1. App Open Counter**
+```dart
+int appCounter = 0;  // Variable untuk menyimpan counter
+
+Future<void> readAndWritePreference() async {
+  final prefs = await SharedPreferences.getInstance();
+  final counter = prefs.getInt(keyAppCounter) ?? 0;
+  final newCounter = counter + 1;
+  await prefs.setInt(keyAppCounter, newCounter);
+  setState(() {
+    appCounter = newCounter;
+  });
+}
+```
+
+Counter ini:
+- Increment setiap kali app dibuka
+- Disimpan di local storage
+- Ditampilkan dengan format: "You have opened the app X times"
+
+**2. Reset Counter Button**
+```dart
+Future<void> deletePreference() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+  setState(() {
+    appCounter = 0;
+  });
+}
+```
+
+Tombol "Reset Counter" yang:
+- Menghapus semua data dari storage
+- Reset counter ke 0
+- Mengupdate UI secara real-time
+
+### UI Components
+
+**Counter Display Section**
+- Light blue background container
+- Menampilkan judul "App Open Counter"
+- Menampilkan pesan counter
+- Red "Reset Counter" button dengan refresh icon
+
+**Pizza List Section**
+- Title "Daftar Pizza"
+- Scrollable list dengan pizza cards
+- Setiap card menampilkan:
+  - Pizza icon (orange)
+  - Pizza name (bold)
+  - Description (2 lines max, truncated)
+  - Price (green, bold)
+  - ID (blue, small)
+
+### How It Works
+
+1. **On App Start**
+   - `initState()` dipanggil
+   - `readAndWritePreference()` dibaca dari storage
+   - Counter di-increment dan disimpan
+   - UI diupdate dengan counter baru
+
+2. **On App Close & Reopen**
+   - Counter yang disimpan dibaca kembali
+   - Counter di-increment lagi
+   - Nilai counter bertambah setiap kali app dibuka
+
+3. **On Reset Button Click**
+   - `deletePreference()` menghapus semua data
+   - Counter di-set ke 0
+   - UI diupdate
+
+
 
 ### Safe (Aman)
 

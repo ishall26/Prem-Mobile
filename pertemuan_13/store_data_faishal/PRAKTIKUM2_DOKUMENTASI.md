@@ -578,3 +578,267 @@ Dengan menggunakan konstanta untuk JSON keys:
 
 Praktikum 3 menunjukkan pentingnya code quality dan best practices dalam development, bukan hanya fungsionalitas yang bekerja.
 
+---
+
+# PRAKTIKUM 4: Menyimpan Data dengan SharedPreferences
+
+## Tujuan Praktikum 4
+
+Mempelajari cara menyimpan data sederhana ke local storage menggunakan SharedPreferences:
+1. Menambahkan package shared_preferences
+2. Membaca dan menulis data dari/ke storage
+3. Menggunakan null coalescing untuk default values
+4. Menghapus data dari storage
+5. Mengintegrasikan dengan JSON loading dari praktikum sebelumnya
+
+## Konsep SharedPreferences
+
+SharedPreferences adalah cara sederhana menyimpan data key-value pairs di local device storage. Cocok untuk menyimpan:
+- User preferences
+- App settings
+- Simple counters
+- Flags dan booleans
+- Strings dan numbers
+
+## Langkah-Langkah Implementasi
+
+### Langkah 1-2: Tambah dan Install Dependensi
+```bash
+flutter pub add shared_preferences
+flutter pub get
+```
+
+Ini akan menambahkan package ke `pubspec.yaml` dan mengunduh semua dependencies yang diperlukan.
+
+### Langkah 3: Import SharedPreferences
+```dart
+import 'package:shared_preferences/shared_preferences.dart';
+```
+
+### Langkah 4: Deklarasikan Variabel Counter
+```dart
+class _PizzaListScreenState extends State<PizzaListScreen> {
+  List<Pizza> pizzaData = [];
+  bool isLoading = true;
+  String? errorMessage;
+  int appCounter = 0;  // ← Variabel untuk menyimpan counter
+```
+
+### Langkah 5-6: Buat Method readAndWritePreference()
+```dart
+Future<void> readAndWritePreference() async {
+  final prefs = await SharedPreferences.getInstance();
+  // ...
+}
+```
+
+Method ini:
+- `async`: Operasi bersifat asinkron (membutuhkan time)
+- `await SharedPreferences.getInstance()`: Mendapatkan instance untuk mengakses storage
+
+### Langkah 7: Baca, Cek Null, dan Increment Counter
+```dart
+final counter = prefs.getInt(keyAppCounter) ?? 0;
+final newCounter = counter + 1;
+```
+
+**Penjelasan:**
+- `prefs.getInt(keyAppCounter)`: Membaca nilai integer dari storage
+- `?? 0`: Null coalescing - jika tidak ada data, gunakan default 0
+- `counter + 1`: Increment nilai
+
+### Langkah 8: Simpan Nilai Baru
+```dart
+await prefs.setInt(keyAppCounter, newCounter);
+```
+
+Menyimpan nilai counter yang sudah di-increment ke storage.
+
+### Langkah 9: Perbarui State dengan setState()
+```dart
+setState(() {
+  appCounter = newCounter;
+});
+```
+
+Memicu rebuild widget dengan nilai counter terbaru.
+
+### Langkah 10: Panggil di initState()
+```dart
+@override
+void initState() {
+  super.initState();
+  readAndWritePreference();  // ← Panggil di initState
+  loadJsonData();
+}
+```
+
+initState() dipanggil sekali saat widget pertama kali dibuat, ideal untuk operasi inisialisasi.
+
+### Langkah 11: Perbarui Tampilan UI
+```dart
+Container(
+  padding: const EdgeInsets.all(20),
+  color: Colors.blue.shade50,
+  child: Column(
+    children: [
+      const Text(
+        'App Open Counter',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 10),
+      Text(
+        'You have opened the app $appCounter times',
+        style: const TextStyle(fontSize: 16),
+      ),
+      const SizedBox(height: 15),
+      ElevatedButton.icon(
+        onPressed: deletePreference,
+        icon: const Icon(Icons.refresh),
+        label: const Text('Reset Counter'),
+      ),
+    ],
+  ),
+)
+```
+
+Menampilkan:
+- Judul "App Open Counter"
+- Pesan berapa kali app dibuka
+- Tombol "Reset Counter"
+
+### Langkah 12: Run Aplikasi
+Aplikasi sekarang akan:
+- Membaca counter saat startup
+- Menambah counter setiap kali app dibuka
+- Menampilkan: "You have opened the app X times"
+
+### Langkah 13: Buat Method deletePreference()
+```dart
+Future<void> deletePreference() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+  
+  setState(() {
+    appCounter = 0;
+  });
+}
+```
+
+**Penjelasan:**
+- `prefs.clear()`: Menghapus SEMUA data yang disimpan
+- `setState()`: Reset UI dengan counter 0
+
+### Langkah 14: Hubungkan ke Tombol Reset
+```dart
+ElevatedButton.icon(
+  onPressed: deletePreference,  // ← Ketika tombol ditekan
+  icon: const Icon(Icons.refresh),
+  label: const Text('Reset Counter'),
+)
+```
+
+### Langkah 15: Test Aplikasi
+1. Jalankan aplikasi → Counter menunjukkan 1
+2. Close dan buka lagi → Counter menunjukkan 2
+3. Klik "Reset Counter" → Counter kembali ke 0
+4. Close dan buka lagi → Counter menunjukkan 1 (reset berhasil)
+
+## Best Practices SharedPreferences
+
+### 1. Gunakan Konstanta untuk Keys
+```dart
+// ✅ Good
+static const String keyAppCounter = 'appCounter';
+await prefs.setInt(keyAppCounter, newCounter);
+
+// ❌ Bad - mudah typo
+await prefs.setInt('appCounter', newCounter);
+await prefs.getInt('appcounter');  // Typo! Case sensitivity
+```
+
+### 2. Selalu Gunakan Null Coalescing
+```dart
+// ✅ Good - handle data yang belum ada
+final counter = prefs.getInt(keyAppCounter) ?? 0;
+
+// ❌ Bad - bisa return null
+final counter = prefs.getInt(keyAppCounter);
+```
+
+### 3. Gunakan Async/Await dengan Proper Error Handling
+```dart
+// ✅ Good
+Future<void> readAndWritePreference() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final counter = prefs.getInt(keyAppCounter) ?? 0;
+    final newCounter = counter + 1;
+    await prefs.setInt(keyAppCounter, newCounter);
+    setState(() {
+      appCounter = newCounter;
+    });
+  } catch (e) {
+    print('Error: $e');
+  }
+}
+
+// ❌ Bad - tanpa error handling
+Future<void> readAndWritePreference() async {
+  final prefs = await SharedPreferences.getInstance();
+  // ...
+}
+```
+
+### 4. Clear() vs Remove()
+```dart
+// Hapus semua data
+await prefs.clear();
+
+// Hapus data tertentu
+await prefs.remove(keyAppCounter);
+```
+
+## Integrasi dengan Praktikum Sebelumnya
+
+Praktikum 4 mengintegrasikan:
+- **Praktikum 1**: Load JSON pizza data
+- **Praktikum 2**: Handle data tidak konsisten dengan type casting
+- **Praktikum 3**: Konstanta untuk JSON keys
+- **Praktikum 4**: SharedPreferences untuk counter
+
+**Hasil akhir:**
+- UI menampilkan counter app opens
+- Tombol reset menghapus semua data storage
+- Daftar pizza dari JSON tetap ditampilkan
+- Kombinasi sempurna antara API/JSON data dan local storage
+
+## Perbandingan Storage Solutions
+
+| Fitur | SharedPreferences | SQLite | Firebase |
+|-------|------------------|--------|----------|
+| **Tipe Data** | Key-value simple | Complex relational | Cloud-based |
+| **Ukuran Data** | Kecil | Medium-Large | Unlimited |
+| **Async** | Ya | Ya | Ya |
+| **Query** | Tidak | Ya | Ya |
+| **Offline** | Ya | Ya | Partial |
+| **Kompleksitas** | Mudah | Medium | Complex |
+| **Use Case** | Settings, Flags | Structured data | Sync across devices |
+
+SharedPreferences ideal untuk data sederhana seperti user preferences, app settings, dan simple counters.
+
+## Kesimpulan Praktikum 4
+
+Dengan SharedPreferences, aplikasi dapat:
+- ✅ Menyimpan data di local device
+- ✅ Membaca data yang sudah disimpan
+- ✅ Menghapus data yang tidak diperlukan
+- ✅ Menangani data yang tidak ada dengan default values
+- ✅ Membuat app lebih interactive dan persistent
+
+Praktikum 1-4 mengajarkan full cycle development:
+1. **Load & Parse**: Membaca data eksternal (JSON)
+2. **Handle Error**: Menangani data tidak konsisten
+3. **Code Quality**: Best practices dengan konstanta
+4. **Persistence**: Menyimpan data lokal dengan SharedPreferences
+
