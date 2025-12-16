@@ -1,339 +1,191 @@
-# Store Data Faishal - Pizza Store App
+# Laporan Praktikum Codelabs #13
+# Laporan Praktikum Flutter — State Management, Async, Stream, dan BLoC
+## Identitas Mahasiswa
+| Nama | Kelas | Absen |
+|------|-------|-------|
+| Faishal Harist Rahmawan | TI-3H | 10 |
 
-Aplikasi Flutter untuk menampilkan daftar pizza dengan penanganan data JSON yang robust.
+# PRAKTIKUM 1: Load dan Parse Data JSON
 
-## 📚 Praktikum
+## Tujuan
+- Membaca file JSON dari assets
+- Membuat model data Pizza
+- Parse JSON menjadi object Dart
+- Menampilkan data di UI dengan ListView
 
-### Praktikum 1: Load dan Parse JSON
-- ✅ Membaca file JSON dari assets
-- ✅ Membuat model data Pizza
-- ✅ Parse JSON menjadi object Dart
-- ✅ Menampilkan data di ListView
+## Langkah-Langkah
 
-### Praktikum 2: Handle Kompatibilitas Data JSON
-- ✅ Type casting untuk konversi tipe data (String/Int, String/Double)
-- ✅ Null coalescing operator (??) untuk default values
-- ✅ Error handling dengan try-catch
-- ✅ Ternary operator untuk user-friendly UI
+1. Buat file `assets/pizzalist.json` dengan struktur pizza (id, pizzaName, description, price, imageUrl)
+2. Buat model `Pizza` di `lib/model/pizza.dart`
+3. Buat factory constructor `Pizza.fromJson()` untuk parse JSON
+4. Buat method `loadJsonData()` di `main.dart` untuk load dan parse JSON dari assets
+5. Tampilkan data pizza di ListView.builder
+6. Jalankan aplikasi
 
-### Praktikum 3: Menangani Error JSON
-- ✅ Menggunakan konstanta untuk JSON keys
-- ✅ Menghindari typo pada nama kunci
-- ✅ Meningkatkan code safety dan maintainability
+## Hasil
+✅ Aplikasi dapat membaca dan menampilkan daftar pizza dari JSON
 
-### Praktikum 4: SharedPreferences
-- ✅ Menyimpan data sederhana ke local device
-- ✅ Membaca data yang sudah disimpan
-- ✅ Menampilkan counter app opens
-- ✅ Tombol reset untuk menghapus data
-
-### Praktikum 5: path_provider & Filesystem Access
-- ✅ Mengakses documents directory
-- ✅ Mengakses temporary directory
-- ✅ Menampilkan jalur absolut filesystem
-- ✅ Cross-platform file access yang aman
-
-### Praktikum 4: SharedPreferences
-- ✅ Menyimpan data sederhana (counter) ke local storage
-- ✅ Membaca data dari storage dengan null coalescing
-- ✅ Menghapus semua data dengan clear()
-- ✅ Integrasi dengan JSON loading dari praktikum sebelumnya
+### Output
+![Praktikum 1](images/p1.png)
 
 ---
 
-## 📋 Soal 6: SharedPreferences Implementation
+# PRAKTIKUM 2: Handle Kompatibilitas Data JSON
 
-### Fitur yang Ditambahkan
+## Tujuan
+- Menangani data JSON yang tidak konsisten (tipe data berbeda)
+- Handle field null atau missing
+- Implement proper error handling
+- Tampilkan data user-friendly
 
-**1. App Open Counter**
-```dart
-int appCounter = 0;  // Variable untuk menyimpan counter
+## Langkah-Langkah
 
-Future<void> readAndWritePreference() async {
-  final prefs = await SharedPreferences.getInstance();
-  final counter = prefs.getInt(keyAppCounter) ?? 0;
-  final newCounter = counter + 1;
-  await prefs.setInt(keyAppCounter, newCounter);
-  setState(() {
-    appCounter = newCounter;
-  });
-}
-```
+1. Buat `pizzalist_broken.json` dengan data inconsistent (string ID, null fields, missing fields)
+2. Update `Pizza.fromJson()` dengan type casting:
+   - ID: cek apakah int, jika tidak gunakan `int.tryParse()` dengan default 0
+   - String fields: gunakan `?.toString() ?? 'default'`
+   - Price: cek apakah double, jika tidak gunakan `double.tryParse()` dengan default 0
+3. Update UI dengan ternary operator untuk handle empty strings
+4. Jalankan aplikasi
 
-Counter ini:
-- Increment setiap kali app dibuka
-- Disimpan di local storage
-- Ditampilkan dengan format: "You have opened the app X times"
+## Hasil
+✅ Aplikasi dapat menangani data tidak konsisten tanpa crash
 
-**2. Reset Counter Button**
-```dart
-Future<void> deletePreference() async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.clear();
-  setState(() {
-    appCounter = 0;
-  });
-}
-```
-
-Tombol "Reset Counter" yang:
-- Menghapus semua data dari storage
-- Reset counter ke 0
-- Mengupdate UI secara real-time
-
-### UI Components
-
-**Counter Display Section**
-- Light blue background container
-- Menampilkan judul "App Open Counter"
-- Menampilkan pesan counter
-- Red "Reset Counter" button dengan refresh icon
-
-**Pizza List Section**
-- Title "Daftar Pizza"
-- Scrollable list dengan pizza cards
-- Setiap card menampilkan:
-  - Pizza icon (orange)
-  - Pizza name (bold)
-  - Description (2 lines max, truncated)
-  - Price (green, bold)
-  - ID (blue, small)
-
-### How It Works
-
-1. **On App Start**
-   - `initState()` dipanggil
-   - `readAndWritePreference()` dibaca dari storage
-   - Counter di-increment dan disimpan
-   - UI diupdate dengan counter baru
-
-2. **On App Close & Reopen**
-   - Counter yang disimpan dibaca kembali
-   - Counter di-increment lagi
-   - Nilai counter bertambah setiap kali app dibuka
-
-3. **On Reset Button Click**
-   - `deletePreference()` menghapus semua data
-   - Counter di-set ke 0
-   - UI diupdate
-
-
-
-### Safe (Aman)
-
-**1. Compile-Time Error Detection**
-```dart
-// ❌ String literal - error terdeteksi saat runtime
-json['pizzaNam']  // Typo, tidak terdeteksi sampai runtime
-
-// ✅ Konstanta - error terdeteksi saat compile-time
-json[keyPizzaNam]  // ERROR! Konstanta tidak ada
-```
-
-Dengan menggunakan konstanta, compiler dapat mendeteksi kesalahan pada tahap compile-time, bukan saat aplikasi berjalan. Jika ada typo pada nama konstanta, IDE akan langsung menunjukkan error.
-
-**2. Refactoring Aman**
-```dart
-// ❌ String literal - perlu update manual di banyak tempat
-// Risk: lupa update di salah satu tempat
-json['pizzaName']  // File 1
-json['pizzaName']  // File 2
-json['pizzaName']  // File 3
-
-// ✅ Konstanta - update hanya di satu tempat
-const String keyPizzaName = 'pizzaName';  // Update sini saja!
-```
-
-Jika struktur JSON berubah, cukup update konstanta di satu tempat. IDE dapat membantu melakukan refactoring otomatis di semua file yang menggunakan konstanta tersebut.
-
-**3. Typo Protection**
-```dart
-// ❌ String literal - mudah typo
-json['pizzzaName']  // Lupa satu huruf 'a'
-json['PIZZANAME']   // Salah case
-json['pizz_name']   // Salah format
-
-// ✅ Konstanta - IDE auto-complete
-json[keyPizzaName]  // IDE melengkapi otomatis, tidak bisa typo
-```
-
-IDE memberikan auto-complete untuk konstanta, sehingga developer tidak perlu mengetik manual dan mengurangi risiko typo.
-
-### Maintainable (Mudah Dirawat)
-
-**1. Centralized Definition**
-```dart
-// Semua kunci JSON terdefinisi di satu tempat - mudah di-audit
-const String keyId = 'id';
-const String keyPizzaName = 'pizzaName';
-const String keyDescription = 'description';
-const String keyPrice = 'price';
-const String keyImageUrl = 'imageUrl';
-```
-
-Developer dapat dengan cepat melihat semua field yang digunakan dalam model, tanpa perlu mencari-cari di seluruh file.
-
-**2. Self-Documenting Code**
-```dart
-// ✅ Dengan konstanta - jelas bahwa ini mengakses JSON
-pizzaName: json[keyPizzaName]?.toString() ?? 'No Name',
-
-// ❌ Tanpa konstanta - kurang jelas
-pizzaName: json['pizzaName']?.toString() ?? 'No Name',
-```
-
-Konstanta membuat code lebih ekspresif dan self-explanatory. Developer baru dapat langsung memahami struktur model.
-
-**3. Easy Search & Replace**
-```dart
-// Dengan konstanta, developer dapat:
-// 1. Search: Cari semua penggunaan keyPizzaName
-// 2. Jump to definition: Lihat konstanta didefinisikan di mana
-// 3. Refactor: Ubah semua referensi sekaligus
-// 4. Understand: Clear dependencies antara class
-```
-
-IDE memberikan support yang lebih baik untuk navigasi dan refactoring dengan konstanta dibanding string literal.
-
-**4. Consistency Across Multiple Files**
-Jika ada banyak file yang menggunakan model Pizza (API service, database helper, UI components), semua file akan menggunakan kunci yang sama dan konsisten.
+### Output
+![Praktikum 2](images/p2.png)
 
 ---
 
-## 🏗️ Arsitektur
+# PRAKTIKUM 3: Konstanta untuk JSON Keys
 
-```
-lib/
-├── main.dart                 # Main app & UI
-└── model/
-    └── pizza.dart           # Pizza model dengan konstanta JSON keys
+## Tujuan
+- Mengganti string literals dengan konstanta
+- Menghindari typo pada JSON keys
+- Meningkatkan code safety dan maintainability
 
-assets/
-├── pizzalist.json           # Data normal
-└── pizzalist_broken.json    # Data untuk testing error handling
-```
+## Langkah-Langkah
 
----
+1. Deklarasikan konstanta di atas class `Pizza`:
+   - `const String keyId = 'id'`
+   - `const String keyPizzaName = 'pizzaName'`
+   - `const String keyDescription = 'description'`
+   - `const String keyPrice = 'price'`
+   - `const String keyImageUrl = 'imageUrl'`
+2. Update `Pizza.fromJson()` menggunakan konstanta (replace `json['key']` dengan `json[keyXxx]`)
+3. Update `Pizza.toJson()` menggunakan konstanta
+4. Jalankan aplikasi
 
-## 📋 Soal 7: Jelaskan path_provider
+## Hasil
+✅ Code lebih safe dari typo dan mudah di-maintain
 
-### Apa itu path_provider?
-
-`path_provider` adalah Flutter package yang menyediakan akses ke direktori sistem file yang umum digunakan aplikasi, dengan cara yang konsisten di semua platform (Android, iOS, Windows, Linux, macOS).
-
-### Mengapa path_provider Penting?
-
-**1. Cross-Platform Compatibility**
-
-Path untuk menyimpan dokumen berbeda di setiap platform:
-- **Android**: `/data/user/0/package.name/...`
-- **iOS**: `/var/mobile/Containers/Data/Application/.../Documents`
-- **Windows**: `C:\Users\Username\AppData\Local\...`
-- **Linux**: `/home/username/.local/share/...`
-
-Tanpa path_provider, Anda harus menulis hardcoded paths untuk setiap platform. path_provider handle semua ini secara otomatis!
-
-**2. Platform-Specific Best Practices**
-
-```dart
-// Documents Directory: Untuk data yang disimpan permanen
-final documentsDir = await getApplicationDocumentsDirectory();
-
-// Temporary Directory: Untuk cache/temporary files
-final tempDir = await getTemporaryDirectory();
-
-// External Storage: Untuk akses file dari outside app
-final externalDir = await getExternalStorageDirectory();
-```
-
-**3. Permissions & Security**
-
-path_provider menangani:
-- Meminta permissions yang diperlukan secara otomatis
-- Menyimpan file di lokasi yang aman dan sesuai platform
-- Menghindari conflicts dengan app lain
-- Mematuhi privacy regulations (data isolation)
-
-### Direktori yang Tersedia
-
-| Method | Tujuan | Platform | Permanent |
-|--------|--------|----------|-----------|
-| `getApplicationDocumentsDirectory()` | App data penting | All | Ya |
-| `getTemporaryDirectory()` | Cache/temp files | All | Tidak |
-| `getApplicationSupportDirectory()` | App support files | iOS, macOS | Ya |
-| `getApplicationCacheDirectory()` | App cache | All | Tidak |
-| `getExternalStorageDirectory()` | External storage | Android | Ya |
-| `getDownloadsDirectory()` | Downloads folder | Android | Ya |
-
-### Use Cases Praktis
-
-**1. Menyimpan User Preferences**
-```dart
-final dir = await getApplicationDocumentsDirectory();
-final file = File('${dir.path}/preferences.json');
-await file.writeAsString(jsonData);
-```
-
-**2. Menyimpan Cache Images**
-```dart
-final dir = await getTemporaryDirectory();
-final file = File('${dir.path}/cached_image.png');
-await file.writeAsBytes(imageBytes);
-```
-
-**3. Menyimpan Database**
-```dart
-final dir = await getApplicationDocumentsDirectory();
-final dbFile = File('${dir.path}/app.db');
-// Gunakan dengan SQLite atau Hive
-```
-
-### Kesimpulan
-
-path_provider adalah essential untuk:
-- ✅ Cross-platform file access
-- ✅ Security dan isolation
-- ✅ Best practices pada setiap platform
-- ✅ Professional app structure
-
-### 1. `lib/model/pizza.dart`
-Menggunakan konstanta untuk JSON keys untuk meningkatkan safety dan maintainability.
-
-### 2. `lib/main.dart`
-Implementasi error handling dengan try-catch dan ternary operator untuk user-friendly UI.
+### Output
+![Praktikum 3](images/p3.png)
 
 ---
 
-## 🚀 Cara Menjalankan
+# PRAKTIKUM 4: SharedPreferences Counter
 
-```bash
-flutter pub get
-flutter run
-```
+## Tujuan
+- Menyimpan dan membaca data dari local storage
+- Membuat app counter yang persist
+- Implementasi reset counter
+
+## Langkah-Langkah
+
+1. Tambah dependensi: `flutter pub add shared_preferences`
+2. Import: `import 'package:shared_preferences/shared_preferences.dart'`
+3. Deklarasikan variabel: `int appCounter = 0`
+4. Buat method `readAndWritePreference()`:
+   - Baca counter dari storage dengan `prefs.getInt(key) ?? 0`
+   - Increment dan simpan dengan `prefs.setInt(key, newValue)`
+   - Update state
+5. Buat method `deletePreference()`:
+   - Clear semua data dengan `prefs.clear()`
+   - Reset counter ke 0
+6. Panggil di `initState()`
+7. Tambahkan UI section dengan blue background menampilkan counter dan tombol reset
+8. Jalankan aplikasi
+
+## Hasil
+✅ Counter bertambah setiap app dibuka dan tetap persist
+
+### Output
+![Praktikum 4](images/p4.png)
 
 ---
 
-## 📚 Learning Points
+# PRAKTIKUM 5: Akses Filesystem dengan path_provider
 
-1. **Praktikum 1**: Dasar JSON handling di Flutter
-2. **Praktikum 2**: Robust error handling dan null safety
-3. **Praktikum 3**: Best practices dengan konstanta dan code quality
-4. **Praktikum 4**: Data persistence dengan SharedPreferences
-5. **Praktikum 5**: Filesystem access dengan path_provider
+## Tujuan
+- Akses direktori dokumen aplikasi
+- Akses direktori temporary files
+- Tampilkan jalur absolut ke kedua direktori
 
-Kelima praktikum ini mengajarkan dari fundamental hingga production-ready code practices.
+## Langkah-Langkah
+
+1. Tambah dependensi: `flutter pub add path_provider`
+2. Import: `import 'package:path_provider/path_provider.dart'`
+3. Deklarasikan variabel: `String documentsPath = ''` dan `String tempPath = ''`
+4. Buat method `getPaths()`:
+   - Gunakan `getApplicationDocumentsDirectory()` untuk documents path
+   - Gunakan `getTemporaryDirectory()` untuk temp path
+   - Update state dengan paths
+5. Panggil di `initState()`
+6. Tambahkan UI section dengan orange background menampilkan kedua path
+7. Jalankan aplikasi
+
+## Hasil
+✅ Aplikasi menampilkan jalur direktori dengan benar di UI
+
+### Output
+![Praktikum 5](images/p5.png)
 
 ---
 
-## Getting Started
+# PRAKTIKUM 6: File Operations - Write & Read File
 
-This project is a starting point for a Flutter application.
+## Tujuan
+- Menulis data ke file
+- Membaca data dari file
+- Menampilkan file content di UI
 
-A few resources to get you started if this is your first Flutter project:
+## Langkah-Langkah
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+1. Deklarasikan variabel: `late File myFile` dan `String fileText = ''`
+2. Buat method `_initializeFile()`:
+   - Tunggu dengan `Future.delayed()`
+   - Buat File object dengan path dari documentsPath
+   - Panggil `writeFile()`
+3. Buat method `writeFile()`:
+   - Tulis user data ke file dengan `myFile.writeAsString()`
+   - Tambah error handling
+4. Buat method `readFile()`:
+   - Baca content dengan `myFile.readAsString()`
+   - Update fileText state
+   - Tambah error handling
+5. Panggil `_initializeFile()` di `initState()`
+6. Tambahkan UI section dengan green background:
+   - Tombol "Read File"
+   - Tampilkan file content setelah button ditekan
+7. Jalankan aplikasi
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Hasil
+✅ Aplikasi dapat write dan read file dengan benar
+
+### Output
+![Praktikum 6](images/p6.png)
+
+---
+
+## Ringkasan
+
+| Praktikum | Focus | Package | Key Method |
+|-----------|-------|---------|-----------|
+| 1 | Load & Parse JSON | dart:convert | loadJsonData() |
+| 2 | Handle Inconsistent Data | dart:convert | Type casting, null coalescing |
+| 3 | Code Quality | - | Constants |
+| 4 | Local Storage | shared_preferences | readAndWritePreference() |
+| 5 | Filesystem Access | path_provider | getPaths() |
+| 6 | File Operations | dart:io | writeFile(), readFile() |
+
+**User**: Faishal Harist Rahmawan - 2341720218
