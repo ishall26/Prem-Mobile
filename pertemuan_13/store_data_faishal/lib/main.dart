@@ -29,7 +29,9 @@ class PizzaListScreen extends StatefulWidget {
 }
 
 class _PizzaListScreenState extends State<PizzaListScreen> {
-  List<dynamic> pizzaData = [];
+  List<Pizza> pizzaData = [];
+  bool isLoading = true;
+  String? errorMessage;
 
   @override
   void initState() {
@@ -38,32 +40,59 @@ class _PizzaListScreenState extends State<PizzaListScreen> {
   }
 
   Future<void> loadJsonData() async {
-    final String response =
-        await rootBundle.loadString('assets/pizzalist.json');
-    final data = jsonDecode(response);
-    setState(() {
-      pizzaData = data["menu"];
-    });
+    try {
+      final String response = await rootBundle.loadString(
+        'assets/pizzalist.json',
+      );
+      final data = jsonDecode(response) as List<dynamic>;
+      setState(() {
+        pizzaData = data
+            .map((item) => Pizza.fromJson(item as Map<String, dynamic>))
+            .toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error loading pizza data: $e';
+        isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Daftar Pizza"),
-      ),
-      body: pizzaData.isEmpty
+      appBar: AppBar(title: const Text("Daftar Pizza")),
+      body: isLoading
           ? const Center(child: CircularProgressIndicator())
+          : errorMessage != null
+          ? Center(child: Text(errorMessage!))
+          : pizzaData.isEmpty
+          ? const Center(child: Text("Tidak ada data pizza"))
           : ListView.builder(
               itemCount: pizzaData.length,
               itemBuilder: (context, index) {
+                final pizza = pizzaData[index];
                 return Card(
                   margin: const EdgeInsets.all(10),
                   child: ListTile(
                     leading: const Icon(Icons.local_pizza, size: 40),
-                    title: Text(pizzaData[index]["nama"]),
-                    subtitle:
-                        Text("Harga: Rp ${pizzaData[index]["harga"]}"),
+                    title: Text(
+                      pizza.pizzaName.isEmpty ? 'No Name' : pizza.pizzaName,
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          pizza.description.isEmpty
+                              ? 'No Description'
+                              : pizza.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text("Harga: Rp ${pizza.price}"),
+                      ],
+                    ),
                   ),
                 );
               },
