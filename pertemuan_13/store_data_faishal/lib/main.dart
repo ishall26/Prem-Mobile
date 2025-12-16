@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
 import 'model/pizza.dart';
 
 void main() {
@@ -35,15 +37,61 @@ class _PizzaListScreenState extends State<PizzaListScreen> {
   String? errorMessage;
   int appCounter = 0;
 
+  // Variabel untuk menyimpan path
+  String documentsPath = '';
+  String tempPath = '';
+
   @override
   void initState() {
     super.initState();
+    getPaths();
     readAndWritePreference();
     loadJsonData();
   }
 
   // Konstanta untuk SharedPreferences key
   static const String keyAppCounter = 'appCounter';
+
+  // Method untuk mendapatkan paths dari filesystem
+  Future<void> getPaths() async {
+    try {
+      // Dapatkan documents directory
+      final Directory documentsDir = await getApplicationDocumentsDirectory();
+
+      // Dapatkan temporary directory
+      final Directory tempDir = await getTemporaryDirectory();
+
+      // Update state dengan paths
+      setState(() {
+        documentsPath = documentsDir.path;
+        tempPath = tempDir.path;
+      });
+    } catch (e) {
+      // Fallback untuk desktop/testing environment
+      // Gunakan path default tanpa membuat direktori
+      try {
+        final userHome =
+            Platform.environment['HOME'] ??
+            Platform.environment['USERPROFILE'] ??
+            'C:\\Users\\Default';
+
+        final pathSeparator = Platform.pathSeparator;
+
+        setState(() {
+          documentsPath =
+              '$userHome${pathSeparator}Documents${pathSeparator}StoreDataFaishal';
+          tempPath =
+              '$userHome${pathSeparator}AppData${pathSeparator}Local${pathSeparator}Temp${pathSeparator}StoreDataFaishal';
+        });
+      } catch (fallbackError) {
+        // Jika semua gagal, gunakan default paths
+        setState(() {
+          documentsPath = 'C:\\Users\\Documents\\StoreDataFaishal';
+          tempPath = 'C:\\Users\\AppData\\Local\\Temp\\StoreDataFaishal';
+        });
+      }
+    }
+  }
 
   // Method untuk membaca dan menulis preference
   Future<void> readAndWritePreference() async {
@@ -137,6 +185,62 @@ class _PizzaListScreenState extends State<PizzaListScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+                // Filesystem Paths Section
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  color: Colors.orange.shade50,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Filesystem Paths',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Documents Directory:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          documentsPath.isEmpty ? 'Loading...' : documentsPath,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey,
+                            fontFamily: 'Courier',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Temporary Directory:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          tempPath.isEmpty ? 'Loading...' : tempPath,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey,
+                            fontFamily: 'Courier',
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 // Pizza List Section

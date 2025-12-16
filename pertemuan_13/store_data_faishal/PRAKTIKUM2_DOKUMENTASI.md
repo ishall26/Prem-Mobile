@@ -842,3 +842,329 @@ Praktikum 1-4 mengajarkan full cycle development:
 3. **Code Quality**: Best practices dengan konstanta
 4. **Persistence**: Menyimpan data lokal dengan SharedPreferences
 
+---
+
+# PRAKTIKUM 5: Akses Filesystem dengan path_provider
+
+## Tujuan Praktikum 5
+
+Mempelajari cara mengakses filesystem pada perangkat menggunakan path_provider untuk:
+1. Menemukan direktori dokumen aplikasi
+2. Menemukan direktori temporary files
+3. Menampilkan jalur absolut ke direktori tersebut
+4. Memahami direktori sistem file pada berbagai platform
+
+## Langkah-Langkah Praktikum 5
+
+### Langkah 1: Tambahkan Dependensi path_provider
+**Terminal:**
+```bash
+flutter pub add path_provider
+```
+
+Package `path_provider` menyediakan cara yang konsisten untuk mengakses direktori sistem file di berbagai platform (Android, iOS, Windows, Linux, macOS).
+
+### Langkah 2: Lakukan Import
+**File: `lib/main.dart`**
+
+```dart
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+```
+
+**Penjelasan:**
+- `dart:io`: Package untuk file/directory operations
+- `path_provider`: Package untuk akses filesystem directories
+
+### Langkah 3: Tambahkan Variabel Path State
+**File: `lib/main.dart`**
+
+```dart
+class _PizzaListScreenState extends State<PizzaListScreen> {
+  // ... variabel lainnya
+  
+  // Variabel untuk menyimpan path
+  String documentsPath = '';
+  String tempPath = '';
+}
+```
+
+**Penjelasan:**
+- `documentsPath`: Menyimpan jalur ke Application Documents Directory
+- `tempPath`: Menyimpan jalur ke Temporary Directory
+- Diinisialisasi dengan string kosong, nanti diisi async di `getPaths()`
+
+### Langkah 4: Buat Method getPaths()
+**File: `lib/main.dart`**
+
+```dart
+Future<void> getPaths() async {
+  try {
+    // Dapatkan documents directory
+    final Directory documentsDir =
+        await getApplicationDocumentsDirectory();
+    
+    // Dapatkan temporary directory
+    final Directory tempDir = await getTemporaryDirectory();
+    
+    // Update state dengan paths
+    setState(() {
+      documentsPath = documentsDir.path;
+      tempPath = tempDir.path;
+    });
+  } catch (e) {
+    setState(() {
+      errorMessage = 'Error getting paths: $e';
+    });
+  }
+}
+```
+
+**Penjelasan:**
+- `getApplicationDocumentsDirectory()`: Mengembalikan Directory untuk app documents
+  - Android: `/data/user/0/com.example.app/files`
+  - iOS: `/var/mobile/Containers/Data/Application/.../Documents`
+  - Windows: `C:\Users\Username\AppData\Local\com.example.app`
+
+- `getTemporaryDirectory()`: Mengembalikan Directory untuk temporary files
+  - Android: `/data/user/0/com.example.app/cache`
+  - iOS: `/var/mobile/Containers/Data/Application/.../tmp`
+  - Windows: `C:\Users\Username\AppData\Local\Temp`
+
+- `.path`: Property yang mengembalikan jalur absolut sebagai String
+- `setState()`: Update UI dengan paths yang diterima
+
+### Langkah 5: Panggil getPaths() di initState()
+
+```dart
+@override
+void initState() {
+  super.initState();
+  getPaths();
+  readAndWritePreference();
+  loadJsonData();
+}
+```
+
+`getPaths()` dipanggil pertama kali aplikasi terbuka untuk mengambil paths dari sistem.
+
+### Langkah 6: Perbarui Tampilan
+
+```dart
+// Filesystem Paths Section
+Container(
+  padding: const EdgeInsets.all(16),
+  color: Colors.orange.shade50,
+  child: SingleChildScrollView(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Filesystem Paths',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.orange,
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Text(
+          'Documents Directory:',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          documentsPath.isEmpty ? 'Loading...' : documentsPath,
+          style: const TextStyle(
+            fontSize: 11,
+            color: Colors.grey,
+            fontFamily: 'Courier',
+          ),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Temporary Directory:',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          tempPath.isEmpty ? 'Loading...' : tempPath,
+          style: const TextStyle(
+            fontSize: 11,
+            color: Colors.grey,
+            fontFamily: 'Courier',
+          ),
+        ),
+      ],
+    ),
+  ),
+),
+```
+
+**Penjelasan UI:**
+- Menampilkan dua section: Documents Directory dan Temporary Directory
+- Menggunakan monospace font (`Courier`) untuk tampilan path yang lebih jelas
+- Menampilkan "Loading..." saat path belum diambil
+- Menggunakan `SingleChildScrollView` agar text yang panjang dapat di-scroll
+
+### Langkah 7: Run Aplikasi
+
+Aplikasi sekarang menampilkan:
+- **Counter**: Berapa kali app dibuka (dari Praktikum 4)
+- **Filesystem Paths**: Jalur absolut ke Documents dan Temp directories
+- **Pizza List**: Daftar pizza dari JSON (dari Praktikum 1)
+
+**Output contoh:**
+```
+App Open Counter: 5 times
+Reset Counter: [Button]
+
+Filesystem Paths
+Documents Directory:
+/data/user/0/com.example.store_data_faishal/files
+
+Temporary Directory:
+/data/user/0/com.example.store_data_faishal/cache
+
+Daftar Pizza
+[List of pizzas...]
+```
+
+## Soal 7: Jelaskan path_provider
+
+### Apa itu path_provider?
+
+`path_provider` adalah Flutter package yang menyediakan abstraksi untuk mengakses direktori sistem file yang umum digunakan aplikasi, tanpa perlu tahu detail implementasi platform.
+
+### Mengapa path_provider Penting?
+
+**1. Cross-Platform Compatibility**
+```dart
+// ❌ Hardcoded paths - hanya bekerja di Android
+final dir = Directory('/data/data/com.example.app/');
+
+// ✅ path_provider - bekerja di semua platform
+final dir = await getApplicationDocumentsDirectory();
+```
+
+Path untuk menyimpan dokumen berbeda di setiap platform:
+- **Android**: `/data/user/0/package.name/...`
+- **iOS**: `/var/mobile/Containers/Data/Application/.../Documents`
+- **Windows**: `C:\Users\Username\AppData\Local\...`
+- **Linux**: `/home/username/.local/share/...`
+
+path_provider handle semua ini secara otomatis.
+
+**2. Platform-Specific Best Practices**
+```dart
+// Documents Directory: Untuk data yang disimpan permanen
+final documentsDir = await getApplicationDocumentsDirectory();
+
+// Temporary Directory: Untuk cache/temporary files
+final tempDir = await getTemporaryDirectory();
+
+// External Storage: Untuk akses file dari outside app (Android only)
+final externalDir = await getExternalStorageDirectory();
+```
+
+Setiap platform memiliki guidelines untuk menyimpan file jenis apa di direktori mana.
+
+**3. Permissions & Security**
+path_provider menangani:
+- Meminta permissions yang diperlukan secara otomatis
+- Menyimpan file di lokasi yang aman dan sesuai platform
+- Menghindari conflicts dengan app lain
+- Mematuhi privacy regulations (data isolation)
+
+### Direktori yang Tersedia
+
+| Method | Tujuan | Platform | Permanent |
+|--------|--------|----------|-----------|
+| `getApplicationDocumentsDirectory()` | App data penting | All | Ya |
+| `getTemporaryDirectory()` | Cache/temp files | All | Tidak |
+| `getApplicationSupportDirectory()` | App support files | iOS, macOS | Ya |
+| `getApplicationCacheDirectory()` | App cache | All | Tidak |
+| `getExternalStorageDirectory()` | External storage | Android | Ya |
+| `getDownloadsDirectory()` | Downloads folder | Android | Ya |
+
+### Use Cases Praktis
+
+**1. Menyimpan User Preferences**
+```dart
+final dir = await getApplicationDocumentsDirectory();
+final file = File('${dir.path}/preferences.json');
+await file.writeAsString(jsonData);
+```
+
+**2. Menyimpan Cache Images**
+```dart
+final dir = await getTemporaryDirectory();
+final file = File('${dir.path}/cached_image.png');
+await file.writeAsBytes(imageBytes);
+```
+
+**3. Menyimpan Database**
+```dart
+final dir = await getApplicationDocumentsDirectory();
+final dbFile = File('${dir.path}/app.db');
+// Gunakan dengan SQLite atau Hive
+```
+
+**4. Menyimpan Downloaded Files**
+```dart
+final dir = await getDownloadsDirectory();
+final file = File('${dir.path}/document.pdf');
+await file.writeAsBytes(pdfBytes);
+```
+
+## Integrasi dengan Praktikum Sebelumnya
+
+Praktikum 5 mengintegrasikan:
+- **Praktikum 1**: Load JSON pizza data ✅
+- **Praktikum 2**: Handle data tidak konsisten ✅
+- **Praktikum 3**: Konstanta untuk JSON keys ✅
+- **Praktikum 4**: SharedPreferences untuk counter ✅
+- **Praktikum 5**: path_provider untuk filesystem access ✅
+
+**Aplikasi sekarang menampilkan:**
+1. **Data Persistence**: Counter disimpan dengan SharedPreferences
+2. **External Data**: Pizza list dari JSON
+3. **Filesystem Info**: Paths dari path_provider
+4. **Error Handling**: Try-catch untuk async operations
+
+## Kesimpulan Praktikum 5
+
+Dengan path_provider, aplikasi dapat:
+- ✅ Akses filesystem dengan cara yang safe dan cross-platform
+- ✅ Menyimpan file di lokasi yang tepat untuk setiap platform
+- ✅ Menangani permissions dan security dengan benar
+- ✅ Membangun aplikasi yang properly structured
+
+### Pembelajaran Dari Praktikum 1-5
+
+| Praktikum | Focus | Teknologi |
+|-----------|-------|-----------|
+| 1 | JSON parsing | jsonDecode, factory constructors |
+| 2 | Error handling | Type casting, null coalescing |
+| 3 | Code quality | Constants, best practices |
+| 4 | Data persistence | SharedPreferences |
+| 5 | Filesystem access | path_provider, dart:io |
+
+Kombinasi kelima praktikum ini mengajarkan:
+- **Backend Communication**: Load data dari JSON
+- **Data Validation**: Handle inconsistent data
+- **Code Quality**: Write maintainable code
+- **Local Storage**: Persist data locally
+- **Filesystem**: Access system directories
+
+Ini adalah foundation untuk membangun production-ready Flutter applications!
+
+````

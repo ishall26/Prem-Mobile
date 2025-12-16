@@ -22,6 +22,18 @@ Aplikasi Flutter untuk menampilkan daftar pizza dengan penanganan data JSON yang
 - ✅ Meningkatkan code safety dan maintainability
 
 ### Praktikum 4: SharedPreferences
+- ✅ Menyimpan data sederhana ke local device
+- ✅ Membaca data yang sudah disimpan
+- ✅ Menampilkan counter app opens
+- ✅ Tombol reset untuk menghapus data
+
+### Praktikum 5: path_provider & Filesystem Access
+- ✅ Mengakses documents directory
+- ✅ Mengakses temporary directory
+- ✅ Menampilkan jalur absolut filesystem
+- ✅ Cross-platform file access yang aman
+
+### Praktikum 4: SharedPreferences
 - ✅ Menyimpan data sederhana (counter) ke local storage
 - ✅ Membaca data dari storage dengan null coalescing
 - ✅ Menghapus semua data dengan clear()
@@ -203,7 +215,86 @@ assets/
 
 ---
 
-## 📝 File-File Penting
+## 📋 Soal 7: Jelaskan path_provider
+
+### Apa itu path_provider?
+
+`path_provider` adalah Flutter package yang menyediakan akses ke direktori sistem file yang umum digunakan aplikasi, dengan cara yang konsisten di semua platform (Android, iOS, Windows, Linux, macOS).
+
+### Mengapa path_provider Penting?
+
+**1. Cross-Platform Compatibility**
+
+Path untuk menyimpan dokumen berbeda di setiap platform:
+- **Android**: `/data/user/0/package.name/...`
+- **iOS**: `/var/mobile/Containers/Data/Application/.../Documents`
+- **Windows**: `C:\Users\Username\AppData\Local\...`
+- **Linux**: `/home/username/.local/share/...`
+
+Tanpa path_provider, Anda harus menulis hardcoded paths untuk setiap platform. path_provider handle semua ini secara otomatis!
+
+**2. Platform-Specific Best Practices**
+
+```dart
+// Documents Directory: Untuk data yang disimpan permanen
+final documentsDir = await getApplicationDocumentsDirectory();
+
+// Temporary Directory: Untuk cache/temporary files
+final tempDir = await getTemporaryDirectory();
+
+// External Storage: Untuk akses file dari outside app
+final externalDir = await getExternalStorageDirectory();
+```
+
+**3. Permissions & Security**
+
+path_provider menangani:
+- Meminta permissions yang diperlukan secara otomatis
+- Menyimpan file di lokasi yang aman dan sesuai platform
+- Menghindari conflicts dengan app lain
+- Mematuhi privacy regulations (data isolation)
+
+### Direktori yang Tersedia
+
+| Method | Tujuan | Platform | Permanent |
+|--------|--------|----------|-----------|
+| `getApplicationDocumentsDirectory()` | App data penting | All | Ya |
+| `getTemporaryDirectory()` | Cache/temp files | All | Tidak |
+| `getApplicationSupportDirectory()` | App support files | iOS, macOS | Ya |
+| `getApplicationCacheDirectory()` | App cache | All | Tidak |
+| `getExternalStorageDirectory()` | External storage | Android | Ya |
+| `getDownloadsDirectory()` | Downloads folder | Android | Ya |
+
+### Use Cases Praktis
+
+**1. Menyimpan User Preferences**
+```dart
+final dir = await getApplicationDocumentsDirectory();
+final file = File('${dir.path}/preferences.json');
+await file.writeAsString(jsonData);
+```
+
+**2. Menyimpan Cache Images**
+```dart
+final dir = await getTemporaryDirectory();
+final file = File('${dir.path}/cached_image.png');
+await file.writeAsBytes(imageBytes);
+```
+
+**3. Menyimpan Database**
+```dart
+final dir = await getApplicationDocumentsDirectory();
+final dbFile = File('${dir.path}/app.db');
+// Gunakan dengan SQLite atau Hive
+```
+
+### Kesimpulan
+
+path_provider adalah essential untuk:
+- ✅ Cross-platform file access
+- ✅ Security dan isolation
+- ✅ Best practices pada setiap platform
+- ✅ Professional app structure
 
 ### 1. `lib/model/pizza.dart`
 Menggunakan konstanta untuk JSON keys untuk meningkatkan safety dan maintainability.
