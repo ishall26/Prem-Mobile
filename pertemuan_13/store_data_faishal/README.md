@@ -318,8 +318,10 @@ flutter run
 1. **Praktikum 1**: Dasar JSON handling di Flutter
 2. **Praktikum 2**: Robust error handling dan null safety
 3. **Praktikum 3**: Best practices dengan konstanta dan code quality
+4. **Praktikum 4**: Data persistence dengan SharedPreferences
+5. **Praktikum 5**: Filesystem access dengan path_provider
 
-Ketiga praktikum ini mengajarkan dari fundamental hingga production-ready code practices.
+Kelima praktikum ini mengajarkan dari fundamental hingga production-ready code practices.
 
 ---
 

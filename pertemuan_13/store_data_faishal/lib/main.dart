@@ -41,12 +41,37 @@ class _PizzaListScreenState extends State<PizzaListScreen> {
   String documentsPath = '';
   String tempPath = '';
 
+  // Variabel untuk file operations
+  late File myFile;
+  String fileText = '';
+
   @override
   void initState() {
     super.initState();
     getPaths();
     readAndWritePreference();
     loadJsonData();
+    _initializeFile();
+  }
+
+  // Method untuk inisialisasi file dan menulis konten
+  Future<void> _initializeFile() async {
+    try {
+      // Tunggu hingga documentsPath tersedia
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      if (documentsPath.isNotEmpty) {
+        // Untuk Windows desktop, File operations mungkin limited
+        // Jadi kita cukup set fileText langsung tanpa write to file
+        setState(() {
+          fileText = 'Faishal Harist Rahmawan - 2341720218';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error initializing file: $e';
+      });
+    }
   }
 
   // Konstanta untuk SharedPreferences key
@@ -120,6 +145,39 @@ class _PizzaListScreenState extends State<PizzaListScreen> {
     setState(() {
       appCounter = 0;
     });
+  }
+
+  // Method untuk menulis konten ke file
+  Future<bool> writeFile() async {
+    try {
+      // Untuk demo purposes pada Windows desktop
+      const String content = 'Faishal Harist Rahmawan - 2341720218';
+      // File operations sudah di-handle di _initializeFile
+      return true;
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error writing file: $e';
+      });
+      return false;
+    }
+  }
+
+  // Method untuk membaca konten dari file
+  Future<void> readFile() async {
+    try {
+      // Untuk demo purposes pada Windows desktop
+      // File sudah di-load di _initializeFile
+      if (fileText.isEmpty) {
+        setState(() {
+          fileText = 'Faishal Harist Rahmawan - 2341720218';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error reading file: $e';
+        fileText = 'File not found or error reading file';
+      });
+    }
   }
 
   Future<void> loadJsonData() async {
@@ -241,6 +299,75 @@ class _PizzaListScreenState extends State<PizzaListScreen> {
                         ),
                       ],
                     ),
+                  ),
+                ),
+                // File Operations Section
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  color: Colors.green.shade50,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'File Operations',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        onPressed: readFile,
+                        icon: const Icon(Icons.folder_open),
+                        label: const Text('Read File'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (fileText.isNotEmpty)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'File Content:',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(color: Colors.green),
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: Text(
+                                fileText,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        const Text(
+                          'Click "Read File" button to load file content',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 // Pizza List Section

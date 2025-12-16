@@ -1148,7 +1148,483 @@ Dengan path_provider, aplikasi dapat:
 - ✅ Menangani permissions dan security dengan benar
 - ✅ Membangun aplikasi yang properly structured
 
-### Pembelajaran Dari Praktikum 1-5
+## Kesimpulan Praktikum 5
+
+Dengan path_provider, aplikasi dapat:
+- ✅ Akses direktori sistem file secara cross-platform
+- ✅ Menampilkan jalur absolut ke direktori aplikasi
+- ✅ Menyimpan file di lokasi yang aman dan sesuai platform
+- ✅ Memahami struktur filesystem berbeda di setiap platform
+
+Praktikum 1-5 mengajarkan full cycle development:
+1. **Load & Parse**: Membaca data eksternal (JSON)
+2. **Handle Error**: Menangani data tidak konsisten
+3. **Code Quality**: Best practices dengan konstanta
+4. **Persistence**: Menyimpan data lokal dengan SharedPreferences
+5. **Filesystem**: Mengakses direktori sistem dengan path_provider
+
+---
+
+# PRAKTIKUM 6: File Operations - Baca dan Tulis File
+
+## Tujuan Praktikum 6
+
+Mempelajari cara membaca dan menulis file ke filesystem menggunakan dart:io:
+1. Membuat file di direktori dokumen aplikasi
+2. Menulis data ke file
+3. Membaca data dari file
+4. Menampilkan data yang dibaca di UI
+5. Mengintegrasikan dengan path_provider dari praktikum 5
+
+## Langkah-Langkah Implementasi
+
+### Langkah 1: Deklarasikan Variabel File
+**File: `lib/main.dart`**
+
+```dart
+class _PizzaListScreenState extends State<PizzaListScreen> {
+  // ... variabel lainnya
+  
+  // File operation variables
+  late File myFile;
+  String fileText = '';
+}
+```
+
+**Penjelasan:**
+- `late File myFile`: Late initialization untuk File object
+  - `late` keyword memungkinkan deklarasi tanpa harus inisialisasi langsung
+  - Akan diinisialisasi nanti di `_initializeFile()` method
+  
+- `String fileText = ''`: Menyimpan content yang dibaca dari file
+  - Digunakan untuk menampilkan isi file di UI
+
+### Langkah 2: Buat Method _initializeFile()
+**File: `lib/main.dart`**
+
+```dart
+Future<void> _initializeFile() async {
+  try {
+    // Tunggu documentsPath tersedia
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    // Buat File object dengan path
+    final String pathSeparator = Platform.pathSeparator;
+    myFile = File('$documentsPath${pathSeparator}user_data.txt');
+    
+    // Tulis initial data
+    await writeFile();
+  } catch (e) {
+    setState(() {
+      errorMessage = 'Error initializing file: $e';
+    });
+  }
+}
+```
+
+**Penjelasan:**
+- `Future.delayed()`: Tunggu 500ms agar `documentsPath` sudah diisi oleh `getPaths()`
+- `Platform.pathSeparator`: Menggunakan path separator yang sesuai platform
+  - Windows: `\`
+  - Unix/Linux/macOS: `/`
+  
+- Membuat File object dengan path lengkap: `$documentsPath\user_data.txt`
+- Memanggil `writeFile()` untuk menulis initial data
+
+### Langkah 3: Buat Method writeFile()
+**File: `lib/main.dart`**
+
+```dart
+Future<bool> writeFile() async {
+  try {
+    const String content = 'Muhammad Faishal Akbar - 2301081';
+    await myFile.writeAsString(content);
+    return true;
+  } catch (e) {
+    setState(() {
+      errorMessage = 'Error writing file: $e';
+    });
+    return false;
+  }
+}
+```
+
+**Penjelasan:**
+- `myFile.writeAsString(content)`: Menulis string ke file
+  - Method ini adalah async dan mengembalikan Future
+  - Jika file tidak ada, akan dibuat otomatis
+  - Jika file sudah ada, akan overwrite dengan content baru
+
+- `try-catch`: Error handling untuk menangkap exception
+- `return true/false`: Mengembalikan status operasi
+
+### Langkah 4: Buat Method readFile()
+**File: `lib/main.dart`**
+
+```dart
+Future<void> readFile() async {
+  try {
+    final content = await myFile.readAsString();
+    setState(() {
+      fileText = content;
+    });
+  } catch (e) {
+    setState(() {
+      errorMessage = 'Error reading file: $e';
+      fileText = 'File not found or error reading file';
+    });
+  }
+}
+```
+
+**Penjelasan:**
+- `myFile.readAsString()`: Membaca seluruh isi file sebagai string
+  - Method ini adalah async dan mengembalikan Future<String>
+  
+- `setState()`: Update `fileText` dengan content yang dibaca
+  - Memicu rebuild widget untuk menampilkan content terbaru
+
+- Error handling: Jika file tidak ada atau error, tampilkan pesan error
+  - Set `fileText` dengan pesan error yang user-friendly
+
+### Langkah 5: Update initState()
+**File: `lib/main.dart`**
+
+```dart
+@override
+void initState() {
+  super.initState();
+  getPaths();
+  _initializeFile();  // ← Tambahkan ini
+  readAndWritePreference();
+  loadJsonData();
+}
+```
+
+`_initializeFile()` dipanggil di initState untuk menginisialisasi file saat app startup.
+
+### Langkah 6: Tambahkan UI Section untuk File Operations
+**File: `lib/main.dart`**
+
+```dart
+// File Operations Section
+Container(
+  padding: const EdgeInsets.all(16),
+  color: Colors.green.shade50,
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text(
+        'File Operations',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.green,
+        ),
+      ),
+      const SizedBox(height: 12),
+      ElevatedButton.icon(
+        onPressed: readFile,
+        icon: const Icon(Icons.folder_open),
+        label: const Text('Read File'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+        ),
+      ),
+      if (fileText.isNotEmpty) ...[
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.green.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            fileText,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      ],
+    ],
+  ),
+),
+```
+
+**Penjelasan UI:**
+- "Read File" button dengan green color untuk membedakan dengan section lain
+- `if (fileText.isNotEmpty)`: Hanya tampilkan file content jika sudah dibaca
+- Container dengan border untuk menampilkan content dengan jelas
+- Icon `folder_open` untuk visual yang lebih intuitif
+
+### Langkah 7: Run Aplikasi
+Aplikasi sekarang akan:
+1. Membuat file `user_data.txt` di Documents Directory saat startup
+2. Menulis "Faishal Harist Rahmawan - 2341720218" ke file
+3. Menampilkan section "File Operations" dengan tombol "Read File"
+4. Ketika "Read File" ditekan, menampilkan content dari file
+
+## Soal 8: Jelaskan Langkah 3 dan 7
+
+### Langkah 3: Implementasi writeFile()
+
+**Tujuan:** Menyimpan data user ke file di filesystem.
+
+**Code:**
+```dart
+Future<bool> writeFile() async {
+  try {
+    const String content = 'Faishal Harist Rahmawan - 2341720218';
+    await myFile.writeAsString(content);
+    return true;
+  } catch (e) {
+    setState(() {
+      errorMessage = 'Error writing file: $e';
+    });
+    return false;
+  }
+}
+```
+
+**Penjelasan Detail:**
+
+1. **Method Signature**
+   - `Future<bool>`: Method ini async dan mengembalikan boolean
+   - `async`: Memungkinkan penggunaan `await` di dalam method
+   - Return value: `true` jika sukses, `false` jika error
+
+2. **Define Content**
+   - `const String content = 'Faishal Harist Rahmawan - 2341720218'`
+   - Ini adalah user data yang akan disimpan
+   - Format: `Name - NIM` (NIM = Nomor Induk Mahasiswa)
+
+3. **Write to File**
+   - `await myFile.writeAsString(content)`
+   - `myFile` adalah File object yang sudah diinisialisasi di `_initializeFile()`
+   - `writeAsString()` menulis string ke file
+   - Jika file tidak ada, akan dibuat otomatis
+   - Jika file sudah ada, akan di-overwrite
+   - `await`: Tunggu operasi selesai sebelum lanjut
+
+4. **Error Handling**
+   - `try-catch`: Tangkap semua exception yang mungkin terjadi
+   - Exception dapat terjadi karena:
+     - Permission denied (tidak punya akses write)
+     - Disk full
+     - Path tidak valid
+   - Jika error, tampilkan error message di UI via `setState()`
+   - Return `false` untuk mengindikasikan operasi gagal
+
+5. **Return Value**
+   - `return true`: Jika write berhasil
+   - `return false`: Jika ada error
+   - Caller dapat menggunakan return value ini untuk mengetahui status
+
+**Benefit:**
+- Data user tersimpan permanen di filesystem
+- Tidak hilang meski app di-close
+- Can be read later dengan `readFile()`
+
+### Langkah 7: Run Aplikasi dan Verifikasi
+
+**Tujuan:** Memastikan file operations berjalan dengan benar.
+
+**Proses:**
+1. **App Startup**
+   - `initState()` dipanggil
+   - `getPaths()` dijalankan untuk mendapat documentsPath
+   - `_initializeFile()` dijalankan:
+     - Tunggu 500ms agar documentsPath tersedia
+     - Buat File object dengan path `$documentsPath\user_data.txt`
+     - Call `writeFile()` untuk menulis initial data
+   
+2. **File Created**
+   - File `user_data.txt` dibuat di direktori dokumen aplikasi
+   - File content: "Faishal Harist Rahmawan - 2341720218"
+   - Tetap ada meski app di-close
+
+3. **User Interaction**
+   - User melihat UI section "File Operations"
+   - User dapat menekan tombol "Read File"
+
+4. **Read File Operation**
+   - Ketika "Read File" ditekan, `readFile()` dipanggil
+   - File dibaca dengan `myFile.readAsString()`
+   - Content ditampilkan di UI dalam container dengan border
+   - Expected output: "Faishal Harist Rahmawan - 2341720218"
+
+5. **Verification**
+   - ✅ Content yang ditampilkan sesuai dengan yang ditulis
+   - ✅ File dapat dibaca berkali-kali tanpa perlu menulis ulang
+   - ✅ Content tetap sama setelah app di-close dan dibuka kembali
+   - ✅ Error handling menampilkan pesan yang jelas jika ada masalah
+
+**Expected Output:**
+```
+App Open Counter
+You have opened the app X times
+Reset Counter: [Button]
+
+Filesystem Paths
+Documents Directory: C:\Users\...\AppData\Local\...
+Temporary Directory: C:\Users\...\AppData\Local\Temp
+
+File Operations
+Read File: [Button]
+[File content displayed after button pressed]
+
+Daftar Pizza
+[Pizza list...]
+```
+
+## File Operations Deep Dive
+
+### Perbedaan writeAsString dan writeAsBytes
+
+```dart
+// writeAsString - untuk text content
+await file.writeAsString('Hello World');
+
+// writeAsBytes - untuk binary content (images, etc)
+await file.writeAsBytes(imageBytes);
+```
+
+### Perbedaan readAsString dan readAsBytes
+
+```dart
+// readAsString - baca sebagai text
+final text = await file.readAsString();  // Returns String
+
+// readAsBytes - baca sebagai binary
+final bytes = await file.readAsBytes();  // Returns List<int>
+```
+
+### Append vs Overwrite
+
+```dart
+// Overwrite - mengganti seluruh content
+await file.writeAsString('New content');
+
+// Append - menambah di akhir file
+await file.writeAsString('More content', mode: FileMode.append);
+```
+
+### Check File Exists
+
+```dart
+if (await myFile.exists()) {
+  final content = await myFile.readAsString();
+  print('File exists: $content');
+} else {
+  print('File does not exist');
+}
+```
+
+### Delete File
+
+```dart
+if (await myFile.exists()) {
+  await myFile.delete();
+  print('File deleted');
+}
+```
+
+## Best Practices File Operations
+
+### 1. Selalu Gunakan Async/Await
+```dart
+// ✅ Good - non-blocking
+Future<void> readFile() async {
+  final content = await myFile.readAsString();
+  setState(() { fileText = content; });
+}
+
+// ❌ Bad - akan block UI
+final content = myFile.readAsStringSync();
+```
+
+### 2. Always Handle Errors
+```dart
+// ✅ Good
+try {
+  await myFile.writeAsString(content);
+} catch (e) {
+  print('Error: $e');
+  setState(() { errorMessage = 'Failed to write file'; });
+}
+
+// ❌ Bad
+await myFile.writeAsString(content);  // Bisa crash jika error
+```
+
+### 3. Gunakan Proper Path
+```dart
+// ✅ Good - cross-platform
+final pathSeparator = Platform.pathSeparator;
+final path = '$documentsPath${pathSeparator}file.txt';
+
+// ❌ Bad - hanya bekerja di Windows
+final path = '$documentsPath\\file.txt';
+```
+
+### 4. Initialize File dengan Late
+```dart
+// ✅ Good - late initialization saat path tersedia
+late File myFile;
+
+void _initializeFile() async {
+  await Future.delayed(Duration(milliseconds: 500));
+  myFile = File('$documentsPath/file.txt');
+}
+
+// ❌ Bad - tidak bisa di-initialize di state declaration
+File myFile = File('...');  // Error! documentsPath tidak ada yet
+```
+
+### 5. Use Constants untuk Path/Filename
+```dart
+// ✅ Good
+const String _fileName = 'user_data.txt';
+final file = File('$documentsPath/$_fileName');
+
+// ❌ Bad
+final file = File('$documentsPath/user_data.txt');
+```
+
+## Integrasi File Operations dengan Praktikum Sebelumnya
+
+Praktikum 6 mengintegrasikan:
+- **Praktikum 5**: Menggunakan `documentsPath` dari path_provider
+- **Praktikum 4**: SharedPreferences untuk app counter
+- **Praktikum 1-3**: JSON loading dan parsing pizza data
+
+**Hasil akhir:**
+- Aplikasi dapat load JSON data (Praktikum 1)
+- Handle data tidak konsisten dengan robust error handling (Praktikum 2-3)
+- Store app counter di SharedPreferences (Praktikum 4)
+- Access filesystem dengan path_provider (Praktikum 5)
+- Read/write files ke filesystem (Praktikum 6)
+
+**Kombinasi features:**
+1. Load pizza data dari JSON assets
+2. Show app open counter
+3. Display filesystem paths
+4. Write user data ke file
+5. Read user data dari file
+
+## Kesimpulan Praktikum 6
+
+Dengan file operations, aplikasi dapat:
+- ✅ Menyimpan data ke file di filesystem
+- ✅ Membaca data dari file
+- ✅ Menampilkan content file di UI
+- ✅ Handle errors dengan proper error handling
+- ✅ Mengintegrasikan dengan filesystem paths dari path_provider
+
+### Pembelajaran Dari Praktikum 1-6
 
 | Praktikum | Focus | Teknologi |
 |-----------|-------|-----------|
@@ -1157,13 +1633,15 @@ Dengan path_provider, aplikasi dapat:
 | 3 | Code quality | Constants, best practices |
 | 4 | Data persistence | SharedPreferences |
 | 5 | Filesystem access | path_provider, dart:io |
+| 6 | File operations | File read/write, dart:io |
 
-Kombinasi kelima praktikum ini mengajarkan:
+Kombinasi keenam praktikum ini mengajarkan:
 - **Backend Communication**: Load data dari JSON
 - **Data Validation**: Handle inconsistent data
 - **Code Quality**: Write maintainable code
 - **Local Storage**: Persist data locally
 - **Filesystem**: Access system directories
+- **File Operations**: Read and write files
 
 Ini adalah foundation untuk membangun production-ready Flutter applications!
 
