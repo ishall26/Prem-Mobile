@@ -15,11 +15,19 @@ class Pizza {
 
   factory Pizza.fromJson(Map<String, dynamic> json) {
     return Pizza(
-      id: json['id'],
-      pizzaName: json['pizzaName'],
-      description: json['description'],
-      price: json['price'],
-      imageUrl: json['imageUrl'],
+      id: json['id'] is int
+          ? json['id']
+          : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+
+      pizzaName: json['pizzaName']?.toString() ?? 'No Name',
+
+      description: json['description']?.toString() ?? 'No Description',
+
+      price: json['price'] is double
+          ? json['price']
+          : double.tryParse(json['price']?.toString() ?? '') ?? 0,
+
+      imageUrl: json['imageUrl']?.toString() ?? '',
     );
   }
 

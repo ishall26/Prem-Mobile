@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'model/pizza.dart';
 
 void main() {
@@ -8,50 +8,41 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Store Data - Haris',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-      ),
-      home: const MyHomePage(title: 'Store Data Harist'),
+      debugShowCheckedModeBanner: false,
+      title: 'Pizza Store App',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const PizzaListScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
+class PizzaListScreen extends StatefulWidget {
+  const PizzaListScreen({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<PizzaListScreen> createState() => _PizzaListScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  List<Pizza> myPizzas = [];
-
-  Future<List<Pizza>> readJsonFile() async {
-    final String response = await rootBundle.loadString('assets/pizzalist.json');
-    final List data = jsonDecode(response);
-
-    myPizzas = data.map((item) => Pizza.fromJson(item)).toList();
-
-    print(convertToJSON(myPizzas));
-    return myPizzas;
-  }
-
-  String convertToJSON(List<Pizza> pizzas) {
-    return jsonEncode(pizzas.map((e) => e.toJson()).toList());
-  }
+class _PizzaListScreenState extends State<PizzaListScreen> {
+  List<dynamic> pizzaData = [];
 
   @override
   void initState() {
     super.initState();
-    readJsonFile().then((value) {
-      setState(() {});
+    loadJsonData();
+  }
+
+  Future<void> loadJsonData() async {
+    final String response =
+        await rootBundle.loadString('assets/pizzalist.json');
+    final data = jsonDecode(response);
+    setState(() {
+      pizzaData = data["menu"];
     });
   }
 
@@ -59,17 +50,24 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: const Text("Daftar Pizza"),
       ),
-      body: ListView.builder(
-        itemCount: myPizzas.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(myPizzas[index].pizzaName),
-            subtitle: Text(myPizzas[index].description),
-          );
-        },
-      ),
+      body: pizzaData.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: pizzaData.length,
+              itemBuilder: (context, index) {
+                return Card(
+                  margin: const EdgeInsets.all(10),
+                  child: ListTile(
+                    leading: const Icon(Icons.local_pizza, size: 40),
+                    title: Text(pizzaData[index]["nama"]),
+                    subtitle:
+                        Text("Harga: Rp ${pizzaData[index]["harga"]}"),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
